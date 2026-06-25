@@ -31,9 +31,20 @@ Get-ADUser
         [string]$SearchString
     )
 
+    begin {
+        # Standard Get-ADUser default display set. Applied so that loading -Properties *
+        # still presents the familiar default table instead of dumping every attribute.
+        $defaultDisplaySet = 'DistinguishedName', 'Enabled', 'GivenName', 'Name', 'ObjectClass', 'ObjectGUID', 'SamAccountName', 'SID', 'Surname', 'UserPrincipalName'
+        $propertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet', [string[]]$defaultDisplaySet)
+        $standardMembers = [System.Management.Automation.PSMemberInfo[]]@($propertySet)
+    }
+
     process {
         if ($PSCmdlet.ShouldProcess($SearchString, "Search AD for matching users")) {
-            Get-ADUser -LDAPFilter "(&(objectCategory=person)(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2))(anr=$SearchString))" -Properties *
+            Get-ADUser -LDAPFilter "(&(objectCategory=person)(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2))(anr=$SearchString))" -Properties * |
+                ForEach-Object {
+                    $_ | Add-Member -MemberType MemberSet -Name PSStandardMembers -Value $standardMembers -Force -PassThru
+                }
         }
     }
 }

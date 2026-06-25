@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "../../../OneDrive - Hunt/Documents/Projects-OD/GitHubClone"
+		},
+		{
+			"name": "PowerShellAdminModule",
+			"path": "."
+		},
+		{
+			"name": "PowerShellCustomProfile",
+			"path": "../PowerShellCustomProfile"
+		}
+	],
+	"settings": {}
+}

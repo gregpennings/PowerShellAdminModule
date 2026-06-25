@@ -6,6 +6,10 @@
 		{
 			"name": "PowerShellAdminModule",
 			"path": "."
+		},
+		{
+			"name": "PowerShellCustomProfile",
+			"path": "../PowerShellCustomProfile"
 		}
 	],
 	"settings": {}

@@ -42,7 +42,7 @@ function ConvertTo-TransposedObject
   	{ # when first object in pipeline arrives retrieve its property names
 			$PropNames = $InputObject.PSObject.Properties | Select-Object -ExpandProperty Name
 			# and create a PSCustomobject in an array for each property
-			$InputObject.PSObject.Properties | %{ $Props += New-Object -TypeName PSObject -Property @{Property = $_.Name} }
+			$InputObject.PSObject.Properties | foreach { $Props += New-Object -TypeName PSObject -Property @{Property = $_.Name} }
 		}
 
 		if ([BOOL]($InputObject.psobject.Properties | where { $_.Name -eq $Title}))
@@ -66,7 +66,7 @@ function ConvertTo-TransposedObject
 
   	# retrieve property values and add them to the property's PSCustomobject
   	$COUNTER = 0
-  	$PropNames | %{
+  	$PropNames | foreach {
   		if ($NULL -ne $InputObject.($_))
   		{ # property exists for current object
   			$Props[$COUNTER] | Add-Member -Name $Property -Type NoteProperty -Value $InputObject.($_)

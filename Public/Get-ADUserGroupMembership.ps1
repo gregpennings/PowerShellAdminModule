@@ -22,6 +22,16 @@ function Get-ADUserGroupMembership {
         Get-ADUserGroupMembership -UserName jdoe
 
     .EXAMPLE
+        Get-ADUserGroupMembership jdoe
+        Positional form -- lists jdoe's groups (sorted by name). Quote names that
+        contain spaces, e.g. Get-ADUserGroupMembership 'g-citrix admins'.
+
+    .EXAMPLE
+        Get-ADUserGroupMembership jdoe | Out-String -Stream | Select-String sql
+        Checks whether jdoe is in any group whose name matches "sql" -- a quick
+        way to confirm a specific entitlement.
+
+    .EXAMPLE
         'jdoe' | Get-ADUserGroupMembership
 
     .EXAMPLE

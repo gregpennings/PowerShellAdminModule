@@ -18,6 +18,10 @@ function Get-Whois {
     .EXAMPLE
         'example.com','example.org' | Get-Whois
 
+    .EXAMPLE
+        whois example.com
+        The module defines a 'whois' alias for Get-Whois.
+
     .OUTPUTS
         PSCustomObject (Domain, Status, Registrar, NameServers, Events, DNSSEC).
 

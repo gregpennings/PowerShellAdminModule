@@ -10,6 +10,11 @@ Function Find-VMByIPExact {
 
     .PARAMETER IP
         Exact guest IP address to match.
+
+    .EXAMPLE
+        Find-VMByIPExact 10.1.2.34
+        Finds the VM whose guest IP is exactly 10.1.2.34.
+        Wrapper for Get-VMInfo -IPExact.
     #>
     [CmdletBinding()]
     param(

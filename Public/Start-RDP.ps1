@@ -18,6 +18,13 @@ function Start-RDP {
     .EXAMPLE
         Start-RDP -ComputerName SERVER01 -Cred (Get-Credential)
 
+    .EXAMPLE
+        $cred = Get-MyCredential -CredPath C:\creds\admin.xml
+        Start-RDP SERVER01 -Cred $cred
+        Start-RDP SERVER02 -Cred $cred
+        Load an admin credential once (positional ComputerName) and reuse it across
+        several RDP sessions.
+
     .OUTPUTS
         None.
 

@@ -42,6 +42,10 @@ Function Get-VMInfo {
 
     .EXAMPLE
         Get-VMInfo -IPLike 10.1.2 -Platform Nutanix
+
+    .EXAMPLE
+        Get-VMInfo SERVER01 | Select-Object Name, DnsName, IPAddresses
+        Looks up a VM by name and projects just the identity columns.
     #>
     [CmdletBinding(DefaultParameterSetName = 'ByName')]
     param(

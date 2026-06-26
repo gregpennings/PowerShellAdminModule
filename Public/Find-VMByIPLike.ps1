@@ -10,6 +10,12 @@ Function Find-VMByIPLike {
 
     .PARAMETER IP
         Partial guest IP to match (e.g. a subnet "10.1.2").
+
+    .EXAMPLE
+        Find-VMByIPLike 10.1.2
+        Finds VMs whose guest IP contains "10.1.2" (e.g. an entire subnet).
+        Shorten the fragment (10.1.2 -> 10.1) to widen the match.
+        Wrapper for Get-VMInfo -IPLike.
     #>
     [CmdletBinding()]
     param(

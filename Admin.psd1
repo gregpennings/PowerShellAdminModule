@@ -12,7 +12,7 @@
 RootModule = 'Admin.psm1'
 
 # Version number of this module.
-ModuleVersion = '2.0.2'
+ModuleVersion = '2.0.3'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -69,24 +69,17 @@ PowerShellVersion = '5.1'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'Clear-AutoRunCD', 'Clear-LoggedOnSessions', 
-               'ConvertTo-TransposedObject', 'Enable-RemoteDesktop', 'Enable-WinRM', 
-               'Enable-WinRMSSL', 'Find-ADUser', 'Find-FilesContainingText', 
-               'Find-InstalledApplication', 
-               'Find-InstalledApplicationOnAllServers', 
-               'Find-InstalledApplicationOnAllWorkstations', 'Find-VMByIPExact', 
-               'Find-VMByIPLike', 'Get-ADGroupMember_OGV', 'Get-AdminConfig', 
-               'Get-ADUserGroupMembership', 'Get-ADUserGroupMembership_OGV', 
-               'Get-CertificateCryptographicProvider_OGV', 'Get-IndependentDrives', 
-               'Get-LoggedOnSessions_OGV', 'Get-LoggedOnUser', 'Get-MotionHistory', 
-               'Get-MyCredential', 'Get-ProfilesFromRemoteComputer', 
-               'Get-RebootHistory', 'Get-RemoteDiskUsage', 
-               'Get-SSLCertificateExpirationDate', 'Get-SystemInfo', 'Get-Uptime', 
-               'Get-VIEventPlus', 'Get-VMInfo', 'Get-VMInfoAllVMs', 'Get-Whois', 
-               'New-IsoFile', 'Remove-ProfilesFromRemoteComputer', 
-               'Remove-Snapshot_OGV', 'Remove-VmAudioDevice_OGV', 
-               'Restart-ComputerAndPing', 'Set-AdminConfig', 'Start-RDP', 
-               'Stop-ComputerAndPing', 'Test-Credential', 'Test-URI'
+FunctionsToExport = 'Clear-LoggedOnSessions', 'ConvertTo-TransposedObject',
+               'Enable-RemoteDesktop', 'Enable-WinRM', 'Enable-WinRMSSL',
+               'Find-ADUser', 'Find-VMByIPExact', 'Find-VMByIPLike',
+               'Get-AdminConfig', 'Get-ADUserGroupMembership',
+               'Get-LoggedOnSessions', 'Get-MyCredential',
+               'Get-ProfilesFromRemoteComputer', 'Get-SSLCertificateExpirationDate',
+               'Get-SystemInfo', 'Get-Uptime', 'Get-VMInfo',
+               'Get-VMInfoAllVMs', 'Get-Whois', 'New-IsoFile',
+               'Remove-ProfilesFromRemoteComputer', 'Restart-ComputerAndPing',
+               'Set-AdminConfig', 'Start-RDP', 'Stop-ComputerAndPing',
+               'Test-Credential'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()

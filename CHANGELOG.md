@@ -5,6 +5,44 @@ Fine-grained, line-level history lives in git (`git log`, `git blame`); this
 file records the *why* in human terms, per the dated notes carried over from
 the original module header.
 
+## [2.0.3] - 2026-06-26
+
+Usage-driven cleanup. Reviewed ~5,400 commands across the PowerShell session
+transcripts to identify functions never invoked, then trimmed dead weight and
+consolidated one redundant variant. Module now exports 26 functions (was 43).
+
+### Removed (zero usage in transcripts, no internal/profile dependents)
+- `Clear-AutoRunCD`, `Find-FilesContainingText`, `Get-IndependentDrives`,
+  `Get-LoggedOnUser`, `Get-MotionHistory`, `Get-RebootHistory`,
+  `Get-RemoteDiskUsage`, `Test-URI`.
+- The unused `_OGV` interactive variants `Get-ADGroupMember_OGV`,
+  `Remove-Snapshot_OGV`, `Remove-VmAudioDevice_OGV`.
+- The `Find-InstalledApplication` family (`Find-InstalledApplication`,
+  `Find-InstalledApplicationOnAllServers`, `Find-InstalledApplicationOnAllWorkstations`).
+- `Get-CertificateCryptographicProvider_OGV` (light use) removed by request.
+- `Get-VIEventPlus` removed by request.
+- All removed functions remain recoverable from git history.
+
+### Consolidated
+- `Get-ADUserGroupMembership_OGV` folded into `Get-ADUserGroupMembership` as a
+  `-GridView` switch (shows enabled users in a grid, returns the selected user's
+  groups). The standalone `_OGV` function is removed.
+
+### Renamed / refactored
+- `Get-LoggedOnSessions_OGV` -> `Get-LoggedOnSessions`. Now emits session objects
+  to the pipeline instead of forcing `Out-GridView`; pipe to `Out-GridView` (`ogv`)
+  yourself when you want the grid. No back-compat alias -- the old name is removed.
+
+### Kept despite low/zero transcript usage
+- Break-glass / rare-by-design tools retained intentionally: `Enable-RemoteDesktop`,
+  `Enable-WinRMSSL`, `New-IsoFile`, `Get-SystemInfo`,
+  `Get-ProfilesFromRemoteComputer`, `Remove-ProfilesFromRemoteComputer`,
+  `Stop-ComputerAndPing`.
+- `Get-VMInfoAllVMs` kept — it is a distinct full-inventory/CSV-export tool, not a
+  variant of `Get-VMInfo`.
+- `Set-AdminConfig`/`Get-AdminConfig` (config infrastructure) and
+  `Test-Credential`/`Get-MyCredential` (invoked by the user profile at startup).
+
 ## [2.0.0] - 2026-06-24
 
 ### Changed

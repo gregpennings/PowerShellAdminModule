@@ -1,8 +1,8 @@
 # PowerShell Admin Module
 
 `Admin` is a PowerShell module of administrative utilities for remote systems,
-Active Directory, VMware/Nutanix infrastructure, credential handling, and general
-system administration.
+Active Directory, VMware/Nutanix/Hyper-V infrastructure, credential handling, and
+general system administration.
 
 > Citrix helpers were moved out into the separate **CitrixTools** module (they
 > require the `Citrix.*.Admin.V*` snap-ins, which are Windows PowerShell 5.1 only).
@@ -24,6 +24,8 @@ system administration.
 - `ActiveDirectory` module for AD-related commands
 - VMware PowerCLI modules for VMware commands (`VMware.VimAutomation.Core` and related cmdlets)
 - Nutanix Prism PowerShell module for Nutanix VM commands (`Nutanix.Prism.PS.Cmds`)
+- `Hyper-V` module for Hyper-V VM commands (Windows feature; soft dependency -- the
+  module imports without it, but the Hyper-V code paths require it)
 - Internet access for `Get-Whois` and SSL certificate checks
 
 ## Configuration
@@ -33,14 +35,14 @@ result with `Get-AdminConfig`; manage the override files with `Set-AdminConfig`.
 
 ## Exported Commands
 
-The module exports 26 functions and two aliases (`whois`, `Transpose-Object`).
+The module exports 30 functions and three aliases (`whois`, `Transpose-Object`, `grep`).
 
 **Network & DNS:** `Get-Whois` (alias `whois`), `Get-SSLCertificateExpirationDate`
 **Files & reports:** `ConvertTo-TransposedObject` (alias `Transpose-Object`), `New-IsoFile`
 **Remote system & monitoring:** `Get-Uptime`, `Get-SystemInfo`, `Get-ProfilesFromRemoteComputer`, `Remove-ProfilesFromRemoteComputer`
 **Credentials:** `Test-Credential`, `Get-MyCredential`
 **Active Directory:** `Find-ADUser`, `Get-ADUserGroupMembership`
-**VMware / Nutanix:** `Find-VMByIPExact`, `Find-VMByIPLike`, `Get-VMInfo`, `Get-VMInfoAllVMs`
+**VMware / Nutanix / Hyper-V:** `Find-VMByIPExact`, `Find-VMByIPLike`, `Get-VMInfo`, `Get-VMInfoAllVMs`, `Connect-HyperVHost`, `Disconnect-HyperVHost`, `Get-HyperVSession`
 **Sessions:** `Clear-LoggedOnSessions`, `Get-LoggedOnSessions`
 **Remote access & enablement:** `Enable-RemoteDesktop`, `Enable-WinRM`, `Enable-WinRMSSL`, `Start-RDP`
 **Workstation / server ops:** `Restart-ComputerAndPing`, `Stop-ComputerAndPing`
@@ -153,21 +155,39 @@ Get-ADUserGroupMembership -UserName jdoe
 Get-ADUserGroupMembership -GridView
 ```
 
-### VMware / Nutanix VM Operations
+### VMware / Nutanix / Hyper-V VM Operations
 
-> These functions require VMware PowerCLI or Nutanix Prism PS modules and assume
-> connections are already established (see your profile's `Connect-VIServer` /
-> `Connect-PrismCentral`).
+> These functions require VMware PowerCLI, Nutanix Prism PS, or the Hyper-V module
+> and assume connections are already established (see your profile's
+> `Connect-VIServer` / `Connect-PrismCentral` / `Connect-HyperVHost`).
+
+#### `Connect-HyperVHost` / `Get-HyperVSession` / `Disconnect-HyperVHost`
+- Hyper-V has no ambient connection, so its hosts are "mounted" as CIM sessions the
+  VM-info functions reuse. `Connect-HyperVHost` opens them (call it from your profile
+  beside `Connect-VIServer`/`Connect-PrismCentral`); `Get-HyperVSession` lists them;
+  `Disconnect-HyperVHost` closes them.
+- With no `-ComputerName`, hosts come from `(Get-AdminConfig).HyperVHosts`. Set the
+  list once with `Set-AdminConfig`. For failover clusters, list every node --
+  clustered VMs are deduped by VM id.
+
+```powershell
+Set-AdminConfig -Name HyperVHosts -Value @('hv01','hv02','clusternodeA','clusternodeB')
+Connect-HyperVHost                 # mounts the configured hosts
+Get-HyperVSession                  # confirm what's mounted
+Connect-HyperVHost -ComputerName wrkgrp-hv -Credential (Get-Credential)
+```
 
 #### `Get-VMInfo`
-- Lists VM info from connected vCenter(s) and Prism Central(s), normalized into a
-  single object shape. Select by name (default), exact IP (`-IPExact`), or partial
-  IP (`-IPLike`).
+- Lists VM info from connected vCenter(s), Prism Central(s), and mounted Hyper-V
+  host(s), normalized into a single object shape. Select by name (default), exact IP
+  (`-IPExact`), or partial IP (`-IPLike`). Limit with `-Platform`
+  (`All` (default) | `VMware` | `Nutanix` | `HyperV`; `Both` = `All`, back-compat).
 
 ```powershell
 Get-VMInfo web-01
 Get-VMInfo -IPExact 10.1.2.3
 Get-VMInfo -IPLike 10.1.2 -Platform Nutanix
+Get-VMInfo SERVER01 -Platform HyperV
 ```
 
 #### `Find-VMByIPExact` / `Find-VMByIPLike`
@@ -179,7 +199,7 @@ Find-VMByIPLike  -IP "10.1.2"
 ```
 
 #### `Get-VMInfoAllVMs`
-- Returns full inventory for all VMware and/or Nutanix VMs to the pipeline.
+- Returns full inventory for all VMware, Nutanix, and/or Hyper-V VMs to the pipeline.
 - `-ExportCsv` writes one timestamped CSV per platform and returns the path(s).
 
 ```powershell

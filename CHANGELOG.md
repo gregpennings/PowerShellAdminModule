@@ -5,6 +5,52 @@ Fine-grained, line-level history lives in git (`git log`, `git blame`); this
 file records the *why* in human terms, per the dated notes carried over from
 the original module header.
 
+## [3.0.0] - 2026-06-26
+
+Added Microsoft Hyper-V as a third VM platform alongside VMware and Nutanix.
+Major bump because the platform selector's default behavior changed (see Changed).
+
+### Added
+- Hyper-V support across the VM-info family. `Get-VMInfo` and `Get-VMInfoAllVMs`
+  now query Hyper-V hosts and normalize them into the same object shape as VMware
+  and Nutanix; `Find-VMByIPExact`/`Find-VMByIPLike` inherit it (they wrap
+  `Get-VMInfo`). Select Hyper-V alone with `-Platform HyperV`.
+- Hyper-V session management. Unlike VMware (`Connect-VIServer`) and Nutanix
+  (`Connect-PrismCentral`), Hyper-V has no ambient connection -- each cmdlet
+  reaches a host explicitly. So the module now holds CIM sessions, keyed by host,
+  in a module-scoped store, with three new exported functions:
+  - `Connect-HyperVHost` -- opens/refreshes CIM sessions and "mounts" them for the
+    session (call it from your profile, beside Connect-VIServer/-PrismCentral).
+    Hosts default to the configured `HyperVHosts` list; current identity by
+    default, `-Credential` for workgroup/other-domain hosts.
+  - `Get-HyperVSession` -- read-only view of the mounted sessions.
+  - `Disconnect-HyperVHost` -- closes sessions (all, or named hosts).
+  Standalone and clustered hosts are both supported: list every cluster node and
+  clustered VMs are deduped by VM id, so they are never double-counted.
+  Module now exports 30 functions (was 27).
+- `HyperVHosts` config key (baseline empty) -- the host list `Connect-HyperVHost`
+  uses when called with no `-ComputerName`. Set it per-machine/user with
+  `Set-AdminConfig -Name HyperVHosts -Value @('hv01','hv02','clusternodeA')`.
+
+### Changed
+- **Breaking:** the `-Platform` default on `Get-VMInfo` and `Get-VMInfoAllVMs` is
+  now `All` (was `Both`). With three platforms "Both" no longer fits, so the
+  canonical values are `All | VMware | Nutanix | HyperV`. `Both` is still accepted
+  as a silent synonym for `All`, so existing calls and scripts keep working --
+  but the default now also sweeps Hyper-V. If you relied on "Both" meaning
+  "VMware + Nutanix only," pass `-Platform VMware,Nutanix`... (note: the selector
+  is single-value; to exclude Hyper-V, query the platforms you want explicitly).
+
+### Notes
+- Hyper-V data is sparser than VMware by nature: guest OS, DNS name, and tags are
+  not on the Hyper-V VM object. IP addresses are gathered from the VM's network
+  adapters (and used to satisfy `-IPExact`/`-IPLike`); rows without a DnsName fall
+  through to the existing reverse-DNS step. Checkpoint age and disk sizing are
+  best-effort (extra remote calls; null on failure).
+- The Hyper-V (`Hyper-V`) module is a soft dependency -- it is not added to the
+  manifest's RequiredModules so the Admin module still imports on machines without
+  the Hyper-V feature. The Hyper-V code paths only run when you mount a host.
+
 ## [2.0.4] - 2026-06-26
 
 Documentation and a small quality-of-life addition. Mined the PowerShell session

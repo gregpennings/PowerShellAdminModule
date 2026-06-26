@@ -1,13 +1,19 @@
 Function Get-VMInfo {
     <#
     .SYNOPSIS
-        Lists VM info from VMware vCenter(s) and Nutanix Prism Central(s).
+        Lists VM info from VMware vCenter(s), Nutanix Prism Central(s), and
+        Hyper-V host(s).
 
     .DESCRIPTION
-        Queries every connected vCenter and Prism Central for VMs that match the
-        selection criteria, normalizes both platforms into a single object shape,
-        and returns one uniform collection. Assumes connections are already
-        established (see profile: Connect-VIServer / Connect-PrismCentral).
+        Queries every connected vCenter, Prism Central, and Hyper-V host for VMs
+        that match the selection criteria, normalizes all platforms into a single
+        object shape, and returns one uniform collection. Assumes connections are
+        already established (see profile: Connect-VIServer / Connect-PrismCentral /
+        Connect-HyperVHost).
+
+        Hyper-V has no ambient connection, so its hosts must be mounted first with
+        Connect-HyperVHost (CIM sessions held by the module). Clustered Hyper-V VMs
+        are deduped by VM id, so connecting every cluster node never double-counts.
 
         VMs can be selected by name (default), by exact IP, or by partial IP.
 
@@ -21,7 +27,9 @@ Function Get-VMInfo {
         Return VMs whose guest IP contains this substring (e.g. a subnet "10.1.2").
 
     .PARAMETER Platform
-        Limit the query to one platform. Defaults to Both.
+        Limit the query to one platform (VMware, Nutanix, or HyperV). Defaults to
+        All. 'Both' is accepted as a back-compat synonym for All (it predates
+        Hyper-V support, when there were only two platforms).
 
     .PARAMETER NoResolveDns
         Skip reverse-DNS resolution. By default, rows the hypervisor doesn't
@@ -44,6 +52,11 @@ Function Get-VMInfo {
         Get-VMInfo -IPLike 10.1.2 -Platform Nutanix
 
     .EXAMPLE
+        Connect-HyperVHost -ComputerName hv01,hv02
+        Get-VMInfo SERVER01 -Platform HyperV
+        Mount the Hyper-V hosts once, then query them like any other platform.
+
+    .EXAMPLE
         Get-VMInfo SERVER01 | Select-Object Name, DnsName, IPAddresses
         Looks up a VM by name and projects just the identity columns.
     #>
@@ -58,7 +71,8 @@ Function Get-VMInfo {
         [Parameter(ParameterSetName = 'ByIPLike', Mandatory)]
         [string]$IPLike,
 
-        [ValidateSet('Both', 'VMware', 'Nutanix')][string]$Platform = 'Both',
+        # 'Both' retained as a back-compat synonym for 'All' (pre-Hyper-V default).
+        [ValidateSet('All', 'Both', 'VMware', 'Nutanix', 'HyperV')][string]$Platform = 'All',
 
         # Reverse-resolve the first IP to its registered network name for rows
         # without a DnsName (Nutanix, or VMware without guest tools). On by
@@ -177,13 +191,102 @@ Function Get-VMInfo {
         }
     }
 
+    # --- Hyper-V -------------------------------------------------------------
+    # No ambient connection: iterate the CIM sessions mounted by Connect-HyperVHost.
+    # Guest IPs / DNS / OS aren't on the VM object -- IPs come from the network
+    # adapters (also used to satisfy the IP parameter sets); DnsName is left for
+    # the reverse-DNS fallback below. Clustered VMs can surface on more than one
+    # node, so dedupe by VMId.
+    function Get-HyperVVMInfo {
+        param([string]$Mode, [string]$VM, [string]$IPExact, [string]$IPLike)
+
+        if ($script:HyperVSessions.Count -eq 0) {
+            Write-Warning "No Hyper-V hosts connected. Run Connect-HyperVHost (or set HyperVHosts via Set-AdminConfig) first."
+            return
+        }
+
+        $seen = [System.Collections.Generic.HashSet[string]]::new()
+
+        foreach ($session in $script:HyperVSessions.Values) {
+            $vms = $null
+            try {
+                $vms = if ($Mode -eq 'ByName') {
+                    Hyper-V\Get-VM -CimSession $session -Name "*$VM*" -ErrorAction SilentlyContinue
+                } else {
+                    Hyper-V\Get-VM -CimSession $session -ErrorAction SilentlyContinue
+                }
+            } catch {
+                Write-Warning "Failed to query Hyper-V host '$($session.ComputerName)': $_"
+                continue
+            }
+
+            foreach ($v in $vms) {
+                # Dedupe clustered VMs owned by whichever node we hit first.
+                if (-not $seen.Add([string]$v.VMId)) { continue }
+
+                # Guest IPs from the VM's network adapters (best-effort).
+                $ips = @()
+                try {
+                    $ips = @($v | Hyper-V\Get-VMNetworkAdapter -ErrorAction Stop |
+                        ForEach-Object { $_.IPAddresses } | Where-Object { $_ })
+                } catch { $ips = @() }
+
+                # Apply IP parameter-set filters. (Use a value, not 'continue'
+                # inside switch -- 'continue' there breaks the switch, not the loop.)
+                $include = switch ($Mode) {
+                    'ByIPExact' { $ips -contains $IPExact }
+                    'ByIPLike'  { ($ips -join ',') -like "*$IPLike*" }
+                    default     { $true }
+                }
+                if (-not $include) { continue }
+
+                # Oldest checkpoint and disk sizing are best-effort (extra remote calls).
+                $oldestSnap = $null
+                try {
+                    $oldestSnap = ($v | Hyper-V\Get-VMSnapshot -ErrorAction Stop |
+                        Sort-Object CreationTime | Select-Object -First 1).CreationTime
+                } catch { $oldestSnap = $null }
+
+                $used = $null; $provisioned = $null
+                try {
+                    $vhds = $v | Hyper-V\Get-VMHardDiskDrive -ErrorAction Stop |
+                        ForEach-Object { Hyper-V\Get-VHD -CimSession $session -Path $_.Path -ErrorAction Stop }
+                    if ($vhds) {
+                        $used        = [math]::Round((($vhds | Measure-Object -Property FileSize -Sum).Sum) / 1GB, 2)
+                        $provisioned = [math]::Round((($vhds | Measure-Object -Property Size     -Sum).Sum) / 1GB, 2)
+                    }
+                } catch { $used = $null; $provisioned = $null }
+
+                New-VMInfoObject @{
+                    Platform           = 'HyperV'
+                    Name               = $v.Name
+                    Notes              = $v.Notes
+                    NumCpu             = $v.ProcessorCount
+                    MemoryGB           = [math]::Round($v.MemoryStartup / 1GB, 2)
+                    IPAddresses        = $ips -join ', '
+                    PowerState         = $v.State
+                    VMHost             = $v.ComputerName
+                    CreateDate         = $v.CreationTime
+                    PersistentId       = $v.VMId
+                    Source             = $v.ComputerName          # the Hyper-V host
+                    OldestSnapshot     = $oldestSnap
+                    UsedSpaceGB        = $used
+                    ProvisionedSpaceGB = $provisioned
+                    HardwareVersion    = $v.Version               # VM config version
+                }
+            }
+        }
+    }
+
     # --- Dispatch ------------------------------------------------------------
     # Pass the criteria explicitly: $PSCmdlet does not resolve inside nested
     # functions, so the parameter-set name must be handed in.
     $mode = $PSCmdlet.ParameterSetName
+    $all = $Platform -in 'All', 'Both'   # 'Both' kept as a back-compat synonym
     $results = @()
-    if ($Platform -in 'Both', 'VMware')  { $results += Get-VMwareVMInfo  -Mode $mode -VM $VM -IPExact $IPExact -IPLike $IPLike }
-    if ($Platform -in 'Both', 'Nutanix') { $results += Get-NutanixVMInfo -Mode $mode -VM $VM -IPExact $IPExact -IPLike $IPLike }
+    if ($all -or $Platform -eq 'VMware')  { $results += Get-VMwareVMInfo  -Mode $mode -VM $VM -IPExact $IPExact -IPLike $IPLike }
+    if ($all -or $Platform -eq 'Nutanix') { $results += Get-NutanixVMInfo -Mode $mode -VM $VM -IPExact $IPExact -IPLike $IPLike }
+    if ($all -or $Platform -eq 'HyperV')  { $results += Get-HyperVVMInfo  -Mode $mode -VM $VM -IPExact $IPExact -IPLike $IPLike }
 
     # Fall back to reverse DNS for rows the hypervisor couldn't supply a name
     # for. -QuickTimeout keeps missing PTR records from stalling bulk queries.

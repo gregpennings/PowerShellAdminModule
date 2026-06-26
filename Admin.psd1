@@ -12,7 +12,7 @@
 RootModule = 'Admin.psm1'
 
 # Version number of this module.
-ModuleVersion = '2.0.4'
+ModuleVersion = '3.0.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -69,11 +69,12 @@ PowerShellVersion = '5.1'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'Clear-LoggedOnSessions', 'ConvertTo-TransposedObject',
+FunctionsToExport = 'Clear-LoggedOnSessions', 'Connect-HyperVHost',
+               'ConvertTo-TransposedObject', 'Disconnect-HyperVHost',
                'Enable-RemoteDesktop', 'Enable-WinRM', 'Enable-WinRMSSL',
                'Find-ADUser', 'Find-VMByIPExact', 'Find-VMByIPLike',
                'Get-AdminConfig', 'Get-ADUserGroupMembership',
-               'Get-LoggedOnSessions', 'Get-MyCredential',
+               'Get-HyperVSession', 'Get-LoggedOnSessions', 'Get-MyCredential',
                'Get-ProfilesFromRemoteComputer', 'Get-SSLCertificateExpirationDate',
                'Get-SystemInfo', 'Get-Uptime', 'Get-VMInfo',
                'Get-VMInfoAllVMs', 'Get-Whois', 'New-IsoFile',

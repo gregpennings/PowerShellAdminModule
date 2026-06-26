@@ -7,8 +7,16 @@ function Get-ADUserGroupMembership {
         Returns the names of the Active Directory groups the specified user belongs
         to (direct membership, from the user's MemberOf), sorted by name.
 
+        With -GridView, all enabled users are shown in a grid first; the groups of
+        the user you select are returned. This replaces the former
+        Get-ADUserGroupMembership_OGV function.
+
     .PARAMETER UserName
         SamAccountName of the user. Defaults to the current user. Accepts pipeline input.
+
+    .PARAMETER GridView
+        Show all enabled AD users in a grid view and return the group memberships of
+        the user selected. Ignores -UserName.
 
     .EXAMPLE
         Get-ADUserGroupMembership -UserName jdoe
@@ -16,16 +24,33 @@ function Get-ADUserGroupMembership {
     .EXAMPLE
         'jdoe' | Get-ADUserGroupMembership
 
+    .EXAMPLE
+        Get-ADUserGroupMembership -GridView
+
     .OUTPUTS
         Microsoft.ActiveDirectory.Management.ADGroup (Name).
     #>
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'ByName')]
     param(
-        [Parameter(ValueFromPipeline, ValueFromPipelineByPropertyName)]
-        [string]$UserName = $env:USERNAME
+        [Parameter(ParameterSetName = 'ByName', ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [string]$UserName = $env:USERNAME,
+
+        [Parameter(ParameterSetName = 'GridView', Mandatory)]
+        [switch]$GridView
     )
     process {
-        (Get-ADUser -Identity $UserName -Properties MemberOf).MemberOf |
+        if ($GridView) {
+            $selected = Get-ADUser -Filter "Enabled -eq 'True'" -Properties SamAccountName, MemberOf |
+                Select-Object Name, UserPrincipalName, SamAccountName, MemberOf |
+                Sort-Object UserPrincipalName |
+                Out-GridView -Title 'Select a user' -PassThru
+            if (-not $selected) { return }
+            $memberOf = $selected.MemberOf
+        } else {
+            $memberOf = (Get-ADUser -Identity $UserName -Properties MemberOf).MemberOf
+        }
+
+        $memberOf |
             Get-ADGroup |
             Sort-Object Name |
             Select-Object Name

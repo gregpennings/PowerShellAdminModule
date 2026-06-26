@@ -5,6 +5,30 @@ Fine-grained, line-level history lives in git (`git log`, `git blame`); this
 file records the *why* in human terms, per the dated notes carried over from
 the original module header.
 
+## [2.0.4] - 2026-06-26
+
+Documentation and a small quality-of-life addition. Mined the PowerShell session
+transcripts again -- this time for real invocation patterns -- and folded the
+useful ones back into the functions' help (deidentified, since this repo is public).
+
+### Added
+- `Select-StringFromObject` (alias `grep`) -- greps the *formatted display text*
+  of piped objects, packaging the recurring `... | Out-String -Stream |
+  Select-String <text>` idiom into one step. Collects all input and formats once
+  so table headers/alignment survive; passes through `-CaseSensitive`,
+  `-SimpleMatch`, `-NotMatch`, `-Context`, and `-Width` (widen to avoid column
+  truncation). Matches display text, not property values -- use `Where-Object`
+  for the latter. Module now exports 27 functions (was 26).
+
+### Documentation
+- Added real-usage `.EXAMPLE`s (generalized to placeholders) to `Find-VMByIPLike`
+  and `Find-VMByIPExact` (had none), and to `Get-ADUserGroupMembership` (positional
+  form + the `| grep <group>` entitlement check), `Get-VMInfo`, `Get-Whois`
+  (documents the `whois` alias), and `Start-RDP` (load a credential once, reuse
+  across hosts).
+- Reformatted `New-IsoFile`'s comment-based help, which was collapsed onto a single
+  line and therefore unparseable by `Get-Help`; its examples now display.
+
 ## [2.0.3] - 2026-06-26
 
 Usage-driven cleanup. Reviewed ~5,400 commands across the PowerShell session

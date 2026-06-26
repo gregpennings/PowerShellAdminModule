@@ -9,7 +9,7 @@ the original module header.
 
 Usage-driven cleanup. Reviewed ~5,400 commands across the PowerShell session
 transcripts to identify functions never invoked, then trimmed dead weight and
-consolidated one redundant variant. Module now exports 28 functions (was 43).
+consolidated one redundant variant. Module now exports 27 functions (was 43).
 
 ### Removed (zero usage in transcripts, no internal/profile dependents)
 - `Clear-AutoRunCD`, `Find-FilesContainingText`, `Get-IndependentDrives`,
@@ -19,6 +19,7 @@ consolidated one redundant variant. Module now exports 28 functions (was 43).
   `Remove-Snapshot_OGV`, `Remove-VmAudioDevice_OGV`.
 - The `Find-InstalledApplication` family (`Find-InstalledApplication`,
   `Find-InstalledApplicationOnAllServers`, `Find-InstalledApplicationOnAllWorkstations`).
+- `Get-CertificateCryptographicProvider_OGV` (light use) removed by request.
 - All removed functions remain recoverable from git history.
 
 ### Consolidated

@@ -33,7 +33,7 @@ result with `Get-AdminConfig`; manage the override files with `Set-AdminConfig`.
 
 ## Exported Commands
 
-The module exports 28 functions and two aliases (`whois`, `Transpose-Object`).
+The module exports 27 functions and two aliases (`whois`, `Transpose-Object`).
 
 **Network & DNS:** `Get-Whois` (alias `whois`), `Get-SSLCertificateExpirationDate`
 **Files & reports:** `ConvertTo-TransposedObject` (alias `Transpose-Object`), `New-IsoFile`
@@ -45,7 +45,6 @@ The module exports 28 functions and two aliases (`whois`, `Transpose-Object`).
 **Remote access & enablement:** `Enable-RemoteDesktop`, `Enable-WinRM`, `Enable-WinRMSSL`, `Start-RDP`
 **Workstation / server ops:** `Restart-ComputerAndPing`, `Stop-ComputerAndPing`
 **Configuration:** `Get-AdminConfig`, `Set-AdminConfig`
-**Special:** `Get-CertificateCryptographicProvider_OGV`
 
 ## Command Reference
 
@@ -258,12 +257,6 @@ Stop-ComputerAndPing -ComputerName Workstation01
 #### `Get-AdminConfig` / `Set-AdminConfig`
 - View the merged module configuration (`Get-AdminConfig`) or write per-machine /
   per-user override values (`Set-AdminConfig`).
-
-### Special Utilities
-
-#### `Get-CertificateCryptographicProvider_OGV`
-- Prompts for certificate selection and returns cryptographic provider details for
-  the selected certificate.
 
 ## Notes
 

@@ -9,7 +9,7 @@ the original module header.
 
 Usage-driven cleanup. Reviewed ~5,400 commands across the PowerShell session
 transcripts to identify functions never invoked, then trimmed dead weight and
-consolidated one redundant variant. Module now exports 27 functions (was 43).
+consolidated one redundant variant. Module now exports 26 functions (was 43).
 
 ### Removed (zero usage in transcripts, no internal/profile dependents)
 - `Clear-AutoRunCD`, `Find-FilesContainingText`, `Get-IndependentDrives`,
@@ -20,12 +20,18 @@ consolidated one redundant variant. Module now exports 27 functions (was 43).
 - The `Find-InstalledApplication` family (`Find-InstalledApplication`,
   `Find-InstalledApplicationOnAllServers`, `Find-InstalledApplicationOnAllWorkstations`).
 - `Get-CertificateCryptographicProvider_OGV` (light use) removed by request.
+- `Get-VIEventPlus` removed by request.
 - All removed functions remain recoverable from git history.
 
 ### Consolidated
 - `Get-ADUserGroupMembership_OGV` folded into `Get-ADUserGroupMembership` as a
   `-GridView` switch (shows enabled users in a grid, returns the selected user's
   groups). The standalone `_OGV` function is removed.
+
+### Renamed / refactored
+- `Get-LoggedOnSessions_OGV` -> `Get-LoggedOnSessions`. Now emits session objects
+  to the pipeline instead of forcing `Out-GridView`; pipe to `Out-GridView` (`ogv`)
+  yourself when you want the grid. No back-compat alias -- the old name is removed.
 
 ### Kept despite low/zero transcript usage
 - Break-glass / rare-by-design tools retained intentionally: `Enable-RemoteDesktop`,

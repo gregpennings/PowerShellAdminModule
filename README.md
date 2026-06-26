@@ -33,15 +33,15 @@ result with `Get-AdminConfig`; manage the override files with `Set-AdminConfig`.
 
 ## Exported Commands
 
-The module exports 27 functions and two aliases (`whois`, `Transpose-Object`).
+The module exports 26 functions and two aliases (`whois`, `Transpose-Object`).
 
 **Network & DNS:** `Get-Whois` (alias `whois`), `Get-SSLCertificateExpirationDate`
 **Files & reports:** `ConvertTo-TransposedObject` (alias `Transpose-Object`), `New-IsoFile`
 **Remote system & monitoring:** `Get-Uptime`, `Get-SystemInfo`, `Get-ProfilesFromRemoteComputer`, `Remove-ProfilesFromRemoteComputer`
 **Credentials:** `Test-Credential`, `Get-MyCredential`
 **Active Directory:** `Find-ADUser`, `Get-ADUserGroupMembership`
-**VMware / Nutanix:** `Find-VMByIPExact`, `Find-VMByIPLike`, `Get-VMInfo`, `Get-VMInfoAllVMs`, `Get-VIEventPlus`
-**Sessions:** `Clear-LoggedOnSessions`, `Get-LoggedOnSessions_OGV`
+**VMware / Nutanix:** `Find-VMByIPExact`, `Find-VMByIPLike`, `Get-VMInfo`, `Get-VMInfoAllVMs`
+**Sessions:** `Clear-LoggedOnSessions`, `Get-LoggedOnSessions`
 **Remote access & enablement:** `Enable-RemoteDesktop`, `Enable-WinRM`, `Enable-WinRMSSL`, `Start-RDP`
 **Workstation / server ops:** `Restart-ComputerAndPing`, `Stop-ComputerAndPing`
 **Configuration:** `Get-AdminConfig`, `Set-AdminConfig`
@@ -188,21 +188,19 @@ Get-VMInfoAllVMs -Platform VMware | Where-Object PowerState -eq 'PoweredOn'
 Get-VMInfoAllVMs -ExportCsv
 ```
 
-#### `Get-VIEventPlus`
-- Returns vSphere events with filtering for entity, event type, user, timespan, and more.
-
-```powershell
-Get-VIEventPlus -Entity $vm -EventType "VmMigratedEvent" -Start (Get-Date).AddDays(-7)
-```
-
 ### Sessions
 
 #### `Clear-LoggedOnSessions`
 - Logs off selected users from a remote computer using `quser` and `Out-GridView`.
 
-#### `Get-LoggedOnSessions_OGV`
-- Displays logged-on sessions from a remote workstation (`quser`) in an interactive
-  grid view. Read-only — it does not log anyone off.
+#### `Get-LoggedOnSessions`
+- Returns logged-on sessions from a remote workstation (`quser`) as objects.
+  Read-only — it does not log anyone off. Pipe to `Out-GridView` for the grid view.
+
+```powershell
+Get-LoggedOnSessions -ComputerName RDS01
+Get-LoggedOnSessions -ComputerName RDS01 | Out-GridView
+```
 
 ### Remote Access and Service Enablement
 

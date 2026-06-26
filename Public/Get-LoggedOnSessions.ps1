@@ -1,23 +1,27 @@
-function Get-LoggedOnSessions_OGV {
+function Get-LoggedOnSessions {
     <#
     .SYNOPSIS
-        Shows the logged-on sessions of a computer in a grid view.
+        Returns the logged-on sessions of a computer as objects.
 
     .DESCRIPTION
-        Runs quser against the target computer, parses the output into objects, and
-        displays them in Out-GridView. Read-only -- it does not log anyone off (use
-        Clear-LoggedOnSessions for that).
+        Runs quser against the target computer and parses the output into objects.
+        Read-only -- it does not log anyone off (use Clear-LoggedOnSessions for that).
+        Pipe to Out-GridView (ogv), Where-Object, Format-Table, etc. as needed.
 
     .PARAMETER ComputerName
         The computer to query. Defaults to the local computer.
 
     .EXAMPLE
-        Get-LoggedOnSessions_OGV -ComputerName RDS01
+        Get-LoggedOnSessions -ComputerName RDS01
+
+    .EXAMPLE
+        Get-LoggedOnSessions -ComputerName RDS01 | Out-GridView
 
     .OUTPUTS
-        None (displays a grid view).
+        PSCustomObject (UserName, SessionName, SessionID, State, IdleTime, LogonTime).
     #>
     [CmdletBinding()]
+    [OutputType([PSCustomObject])]
     param(
         [string]$ComputerName = $env:COMPUTERNAME
     )
@@ -37,5 +41,5 @@ function Get-LoggedOnSessions_OGV {
             IdleTime    = $parts[4]
             LogonTime   = $parts[5]
         }
-    } | Out-GridView -Title "Logged-on sessions on $ComputerName"
+    }
 }

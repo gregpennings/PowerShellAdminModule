@@ -5,6 +5,83 @@ Fine-grained, line-level history lives in git (`git log`, `git blame`); this
 file records the *why* in human terms, per the dated notes carried over from
 the original module header.
 
+## [3.0.0] - 2026-06-26
+
+Added Microsoft Hyper-V as a third VM platform alongside VMware and Nutanix.
+Major bump because the platform selector's default behavior changed (see Changed).
+
+### Added
+- Hyper-V support across the VM-info family. `Get-VMInfo` and `Get-VMInfoAllVMs`
+  now query Hyper-V hosts and normalize them into the same object shape as VMware
+  and Nutanix; `Find-VMByIPExact`/`Find-VMByIPLike` inherit it (they wrap
+  `Get-VMInfo`). Select Hyper-V alone with `-Platform HyperV`.
+- Hyper-V session management. Unlike VMware (`Connect-VIServer`) and Nutanix
+  (`Connect-PrismCentral`), Hyper-V has no ambient connection -- each cmdlet
+  reaches a host explicitly. So the module now holds CIM sessions, keyed by host,
+  in a module-scoped store, with three new exported functions:
+  - `Connect-HyperVHost` -- opens/refreshes CIM sessions and "mounts" them for the
+    session (call it from your profile, beside Connect-VIServer/-PrismCentral).
+    Hosts default to the configured `HyperVHosts` list; current identity by
+    default, `-Credential` for workgroup/other-domain hosts.
+  - `Get-HyperVSession` -- read-only view of the mounted sessions.
+  - `Disconnect-HyperVHost` -- closes sessions (all, or named hosts).
+  Standalone and clustered hosts are both supported: list every cluster node and
+  clustered VMs are deduped by VM id, so they are never double-counted.
+  Module now exports 31 functions (was 27).
+- `Get-HyperVHostFromAD` -- discovers Hyper-V hosts from Active Directory by
+  finding the "Microsoft Hyper-V" service connection point each host publishes
+  under its computer object, and returns their DNS host names. Catches standalone
+  hosts and every failover-cluster node (filtering by OS would miss role-enabled
+  Windows Servers). `-Server` targets a different domain/forest (e.g. `hci.pvt`).
+- `Connect-HyperVHost -FromAD` -- mounts every host `Get-HyperVHostFromAD` finds,
+  so the host list needs no manual upkeep (new hosts appear automatically). This
+  is the recommended way to wire it into a profile: `Connect-HyperVHost -FromAD`.
+- `HyperVHosts` config key (baseline empty) -- the host list `Connect-HyperVHost`
+  uses when called with no `-ComputerName` and without `-FromAD`. Set it
+  per-machine/user with
+  `Set-AdminConfig -Name HyperVHosts -Value @('hv01','hv02','clusternodeA')`.
+
+### Added (general, unrelated to Hyper-V)
+- `Update-PowerShell` -- updates PowerShell 7 to the latest release with guard
+  rails: checks the latest version and skips if already current (`-Force` to
+  override), prefers `winget` when available and falls back to the official
+  `https://aka.ms/install-powershell.ps1 -UseMSI` bootstrap (`-UseMSI` forces it),
+  requires elevation for the MSI path, and supports `-WhatIf`/`-Confirm`,
+  `-Preview`, and `-Quiet`. Module now exports 32 functions.
+  - `-ListVersions` lists recent releases; `-Version x.y.z` installs or reverts to
+    an exact version. Both delegate to the new `Install-PowerShell7.ps1`.
+- `Install-PowerShell7.ps1` (repo root) -- standalone, in-place MSI installer for
+  PowerShell 7: `-ListVersions`, `-Version` (with downgrade/revert by uninstalling
+  the newer 7.x first), `-IncludePreview`, `-Quiet`; default installs the latest
+  stable. Written in Windows PowerShell 5.1-compatible syntax (sets TLS 1.2, no PS7
+  syntax) so it can BOOTSTRAP 7 on a 5.1-only machine -- where the module, now
+  gated to 7.0, cannot load. Not a module function (the loader only dot-sources
+  Public\ and Private\); invoke it directly or via `Update-PowerShell -Version`.
+
+### Changed
+- **Breaking:** the module now requires **PowerShell 7.0+** (`PowerShellVersion`
+  raised from `5.1`; `CompatiblePSEditions = Core`). Several functions use
+  PowerShell 7 syntax, so it no longer loads under Windows PowerShell 5.1. (Citrix
+  helpers already live in the separate CitrixTools module, which keeps the 5.1
+  snap-in dependency out of here.)
+- **Breaking:** the `-Platform` default on `Get-VMInfo` and `Get-VMInfoAllVMs` is
+  now `All` (was `Both`). With three platforms "Both" no longer fits, so the
+  canonical values are `All | VMware | Nutanix | HyperV`. `Both` is still accepted
+  as a silent synonym for `All`, so existing calls and scripts keep working --
+  but the default now also sweeps Hyper-V. If you relied on "Both" meaning
+  "VMware + Nutanix only," pass `-Platform VMware,Nutanix`... (note: the selector
+  is single-value; to exclude Hyper-V, query the platforms you want explicitly).
+
+### Notes
+- Hyper-V data is sparser than VMware by nature: guest OS, DNS name, and tags are
+  not on the Hyper-V VM object. IP addresses are gathered from the VM's network
+  adapters (and used to satisfy `-IPExact`/`-IPLike`); rows without a DnsName fall
+  through to the existing reverse-DNS step. Checkpoint age and disk sizing are
+  best-effort (extra remote calls; null on failure).
+- The Hyper-V (`Hyper-V`) module is a soft dependency -- it is not added to the
+  manifest's RequiredModules so the Admin module still imports on machines without
+  the Hyper-V feature. The Hyper-V code paths only run when you mount a host.
+
 ## [2.0.4] - 2026-06-26
 
 Documentation and a small quality-of-life addition. Mined the PowerShell session

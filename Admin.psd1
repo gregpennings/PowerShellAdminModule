@@ -12,10 +12,10 @@
 RootModule = 'Admin.psm1'
 
 # Version number of this module.
-ModuleVersion = '2.0.4'
+ModuleVersion = '3.0.0'
 
 # Supported PSEditions
-# CompatiblePSEditions = @()
+CompatiblePSEditions = @('Core')
 
 # ID used to uniquely identify this module
 GUID = '208cd22a-6a8f-485a-a35d-14b008e01c46'
@@ -33,7 +33,7 @@ Copyright = '(c) Greg Pennings. All rights reserved.'
 Description = 'Administrative helper functions for VMware, Nutanix, Active Directory, and Windows server/workstation management. (Citrix helpers live in the separate CitrixTools module.)'
 
 # Minimum version of the PowerShell engine required by this module
-PowerShellVersion = '5.1'
+PowerShellVersion = '7.0'
 
 # Name of the PowerShell host required by this module
 # PowerShellHostName = ''
@@ -69,17 +69,19 @@ PowerShellVersion = '5.1'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'Clear-LoggedOnSessions', 'ConvertTo-TransposedObject',
+FunctionsToExport = 'Clear-LoggedOnSessions', 'Connect-HyperVHost',
+               'ConvertTo-TransposedObject', 'Disconnect-HyperVHost',
                'Enable-RemoteDesktop', 'Enable-WinRM', 'Enable-WinRMSSL',
                'Find-ADUser', 'Find-VMByIPExact', 'Find-VMByIPLike',
                'Get-AdminConfig', 'Get-ADUserGroupMembership',
+               'Get-HyperVHostFromAD', 'Get-HyperVSession',
                'Get-LoggedOnSessions', 'Get-MyCredential',
                'Get-ProfilesFromRemoteComputer', 'Get-SSLCertificateExpirationDate',
                'Get-SystemInfo', 'Get-Uptime', 'Get-VMInfo',
                'Get-VMInfoAllVMs', 'Get-Whois', 'New-IsoFile',
                'Remove-ProfilesFromRemoteComputer', 'Restart-ComputerAndPing',
                'Select-StringFromObject', 'Set-AdminConfig', 'Start-RDP',
-               'Stop-ComputerAndPing', 'Test-Credential'
+               'Stop-ComputerAndPing', 'Test-Credential', 'Update-PowerShell'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()

@@ -24,6 +24,15 @@ $script:AdminConfigPaths = [ordered]@{
 }
 $script:AdminConfig = @{}
 
+# ----- Hyper-V session store ------------------------------------------------
+# Unlike VMware (Connect-VIServer) and Nutanix (Connect-PrismCentral), Hyper-V
+# has no ambient connection: Hyper-V\Get-VM reaches each host explicitly via a
+# CIM session. We hold those sessions here, keyed by computer name, so the
+# VM-info functions can reuse them. Populate with Connect-HyperVHost (call it
+# from your profile to "mount" the hosts at startup); inspect with
+# Get-HyperVSession; tear down with Disconnect-HyperVHost.
+$script:HyperVSessions = [ordered]@{}
+
 $public  = @(Get-ChildItem -Path (Join-Path $PSScriptRoot 'Public\*.ps1')  -ErrorAction SilentlyContinue)
 $private = @(Get-ChildItem -Path (Join-Path $PSScriptRoot 'Private\*.ps1') -ErrorAction SilentlyContinue)
 

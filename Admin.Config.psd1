@@ -12,4 +12,11 @@
     # Default output directory for generated files
     # (New-FileNameWithTimestamp, Get-VMInfoAllVMs -ExportCsv).
     DefaultExportPath = 'C:\temp'
+
+    # Hyper-V hosts to mount with Connect-HyperVHost (called with no -ComputerName).
+    # Keep this empty here -- the actual host names are environment-specific. Set
+    # them per-machine/user with:
+    #   Set-AdminConfig -Name HyperVHosts -Value @('hv01','hv02','clusternodeA')
+    # For failover clusters, list every node; clustered VMs are deduped by VM id.
+    HyperVHosts       = @()
 }

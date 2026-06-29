@@ -1,8 +1,8 @@
 # PowerShell Admin Module
 
 `Admin` is a PowerShell module of administrative utilities for remote systems,
-Active Directory, VMware/Nutanix infrastructure, credential handling, and general
-system administration.
+Active Directory, VMware/Nutanix/Hyper-V infrastructure, credential handling, and
+general system administration.
 
 > Citrix helpers were moved out into the separate **CitrixTools** module (they
 > require the `Citrix.*.Admin.V*` snap-ins, which are Windows PowerShell 5.1 only).
@@ -20,10 +20,16 @@ system administration.
 
 ## Requirements
 
-- PowerShell 5.1 or higher
+- PowerShell 7.0 or higher (PowerShell Core; the module no longer targets Windows
+  PowerShell 5.1 -- several functions use PowerShell 7 syntax). On a machine that
+  only has Windows PowerShell 5.1, bootstrap 7 first with the bundled standalone
+  script (it is 5.1-compatible and does not need the module):
+  `powershell.exe -ExecutionPolicy Bypass -File .\Install-PowerShell7.ps1`
 - `ActiveDirectory` module for AD-related commands
 - VMware PowerCLI modules for VMware commands (`VMware.VimAutomation.Core` and related cmdlets)
 - Nutanix Prism PowerShell module for Nutanix VM commands (`Nutanix.Prism.PS.Cmds`)
+- `Hyper-V` module for Hyper-V VM commands (Windows feature; soft dependency -- the
+  module imports without it, but the Hyper-V code paths require it)
 - Internet access for `Get-Whois` and SSL certificate checks
 
 ## Configuration
@@ -33,17 +39,17 @@ result with `Get-AdminConfig`; manage the override files with `Set-AdminConfig`.
 
 ## Exported Commands
 
-The module exports 26 functions and two aliases (`whois`, `Transpose-Object`).
+The module exports 32 functions and three aliases (`whois`, `Transpose-Object`, `grep`).
 
 **Network & DNS:** `Get-Whois` (alias `whois`), `Get-SSLCertificateExpirationDate`
 **Files & reports:** `ConvertTo-TransposedObject` (alias `Transpose-Object`), `New-IsoFile`
 **Remote system & monitoring:** `Get-Uptime`, `Get-SystemInfo`, `Get-ProfilesFromRemoteComputer`, `Remove-ProfilesFromRemoteComputer`
 **Credentials:** `Test-Credential`, `Get-MyCredential`
 **Active Directory:** `Find-ADUser`, `Get-ADUserGroupMembership`
-**VMware / Nutanix:** `Find-VMByIPExact`, `Find-VMByIPLike`, `Get-VMInfo`, `Get-VMInfoAllVMs`
+**VMware / Nutanix / Hyper-V:** `Find-VMByIPExact`, `Find-VMByIPLike`, `Get-VMInfo`, `Get-VMInfoAllVMs`, `Connect-HyperVHost`, `Disconnect-HyperVHost`, `Get-HyperVSession`, `Get-HyperVHostFromAD`
 **Sessions:** `Clear-LoggedOnSessions`, `Get-LoggedOnSessions`
 **Remote access & enablement:** `Enable-RemoteDesktop`, `Enable-WinRM`, `Enable-WinRMSSL`, `Start-RDP`
-**Workstation / server ops:** `Restart-ComputerAndPing`, `Stop-ComputerAndPing`
+**Workstation / server ops:** `Restart-ComputerAndPing`, `Stop-ComputerAndPing`, `Update-PowerShell`
 **Configuration:** `Get-AdminConfig`, `Set-AdminConfig`
 
 ## Command Reference
@@ -153,21 +159,46 @@ Get-ADUserGroupMembership -UserName jdoe
 Get-ADUserGroupMembership -GridView
 ```
 
-### VMware / Nutanix VM Operations
+### VMware / Nutanix / Hyper-V VM Operations
 
-> These functions require VMware PowerCLI or Nutanix Prism PS modules and assume
-> connections are already established (see your profile's `Connect-VIServer` /
-> `Connect-PrismCentral`).
+> These functions require VMware PowerCLI, Nutanix Prism PS, or the Hyper-V module
+> and assume connections are already established (see your profile's
+> `Connect-VIServer` / `Connect-PrismCentral` / `Connect-HyperVHost`).
+
+#### `Connect-HyperVHost` / `Get-HyperVSession` / `Disconnect-HyperVHost`
+- Hyper-V has no ambient connection, so its hosts are "mounted" as CIM sessions the
+  VM-info functions reuse. `Connect-HyperVHost` opens them (call it from your profile
+  beside `Connect-VIServer`/`Connect-PrismCentral`); `Get-HyperVSession` lists them;
+  `Disconnect-HyperVHost` closes them.
+- Host list sources: `-ComputerName` (explicit), `-FromAD` (discover from AD via
+  `Get-HyperVHostFromAD`), or `(Get-AdminConfig).HyperVHosts` (config fallback).
+  For failover clusters, list every node -- clustered VMs are deduped by VM id.
+- `-FromAD` is the zero-maintenance option and the recommended profile call: it
+  finds the "Microsoft Hyper-V" service connection point each host publishes in AD,
+  so new hosts appear automatically. Use `-Server` for a different domain/forest.
+
+```powershell
+Connect-HyperVHost -FromAD -Server hci.pvt   # discover + mount all hosts (recommended)
+Get-HyperVSession                            # confirm what's mounted
+Get-HyperVHostFromAD -Server hci.pvt         # just list what AD knows about
+
+# Explicit / config alternatives:
+Connect-HyperVHost -ComputerName hv01,hv02
+Set-AdminConfig -Name HyperVHosts -Value @('hv01','hv02')
+Connect-HyperVHost                           # mounts the configured hosts
+```
 
 #### `Get-VMInfo`
-- Lists VM info from connected vCenter(s) and Prism Central(s), normalized into a
-  single object shape. Select by name (default), exact IP (`-IPExact`), or partial
-  IP (`-IPLike`).
+- Lists VM info from connected vCenter(s), Prism Central(s), and mounted Hyper-V
+  host(s), normalized into a single object shape. Select by name (default), exact IP
+  (`-IPExact`), or partial IP (`-IPLike`). Limit with `-Platform`
+  (`All` (default) | `VMware` | `Nutanix` | `HyperV`; `Both` = `All`, back-compat).
 
 ```powershell
 Get-VMInfo web-01
 Get-VMInfo -IPExact 10.1.2.3
 Get-VMInfo -IPLike 10.1.2 -Platform Nutanix
+Get-VMInfo SERVER01 -Platform HyperV
 ```
 
 #### `Find-VMByIPExact` / `Find-VMByIPLike`
@@ -179,7 +210,7 @@ Find-VMByIPLike  -IP "10.1.2"
 ```
 
 #### `Get-VMInfoAllVMs`
-- Returns full inventory for all VMware and/or Nutanix VMs to the pipeline.
+- Returns full inventory for all VMware, Nutanix, and/or Hyper-V VMs to the pipeline.
 - `-ExportCsv` writes one timestamped CSV per platform and returns the path(s).
 
 ```powershell
@@ -249,6 +280,27 @@ Restart-ComputerAndPing -ComputerName Workstation01
 ```powershell
 Stop-ComputerAndPing -ComputerName Workstation01
 ```
+
+#### `Update-PowerShell`
+- Updates PowerShell 7 to the latest release. Checks the latest version and skips
+  if already current; prefers `winget`, falls back to the official
+  `aka.ms/install-powershell.ps1 -UseMSI` bootstrap (`-UseMSI` forces it). The MSI
+  path needs an elevated session. Supports `-WhatIf`, `-Preview`, `-Quiet`.
+- `-Version x.y.z` installs (or reverts to) an exact version, and `-ListVersions`
+  lists recent releases; both delegate to `Install-PowerShell7.ps1` (in-place MSI).
+- You update the pwsh you launch next; the current session keeps its version.
+
+```powershell
+Update-PowerShell            # update to latest stable if newer
+Update-PowerShell -WhatIf    # show what would happen, no install
+Update-PowerShell -ListVersions
+Update-PowerShell -Version 7.4.6   # install or revert to a specific version
+Update-PowerShell -UseMSI -Quiet
+```
+
+> `Install-PowerShell7.ps1` (repo root) is a standalone, Windows PowerShell
+> 5.1-compatible installer for the same job. Use it to bootstrap PowerShell 7 on a
+> 5.1-only machine, or run `-ListVersions` / `-Version` directly.
 
 ### Configuration
 

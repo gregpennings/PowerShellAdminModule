@@ -41,7 +41,20 @@ Major bump because the platform selector's default behavior changed (see Changed
   per-machine/user with
   `Set-AdminConfig -Name HyperVHosts -Value @('hv01','hv02','clusternodeA')`.
 
+### Added (general, unrelated to Hyper-V)
+- `Update-PowerShell` -- updates PowerShell 7 to the latest release with guard
+  rails: checks the latest version and skips if already current (`-Force` to
+  override), prefers `winget` when available and falls back to the official
+  `https://aka.ms/install-powershell.ps1 -UseMSI` bootstrap (`-UseMSI` forces it),
+  requires elevation for the MSI path, and supports `-WhatIf`/`-Confirm`,
+  `-Preview`, and `-Quiet`. Module now exports 32 functions.
+
 ### Changed
+- **Breaking:** the module now requires **PowerShell 7.0+** (`PowerShellVersion`
+  raised from `5.1`; `CompatiblePSEditions = Core`). Several functions use
+  PowerShell 7 syntax, so it no longer loads under Windows PowerShell 5.1. (Citrix
+  helpers already live in the separate CitrixTools module, which keeps the 5.1
+  snap-in dependency out of here.)
 - **Breaking:** the `-Platform` default on `Get-VMInfo` and `Get-VMInfoAllVMs` is
   now `All` (was `Both`). With three platforms "Both" no longer fits, so the
   canonical values are `All | VMware | Nutanix | HyperV`. `Both` is still accepted

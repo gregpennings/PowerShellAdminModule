@@ -20,7 +20,8 @@ general system administration.
 
 ## Requirements
 
-- PowerShell 5.1 or higher
+- PowerShell 7.0 or higher (PowerShell Core; the module no longer targets Windows
+  PowerShell 5.1 -- several functions use PowerShell 7 syntax)
 - `ActiveDirectory` module for AD-related commands
 - VMware PowerCLI modules for VMware commands (`VMware.VimAutomation.Core` and related cmdlets)
 - Nutanix Prism PowerShell module for Nutanix VM commands (`Nutanix.Prism.PS.Cmds`)
@@ -35,7 +36,7 @@ result with `Get-AdminConfig`; manage the override files with `Set-AdminConfig`.
 
 ## Exported Commands
 
-The module exports 31 functions and three aliases (`whois`, `Transpose-Object`, `grep`).
+The module exports 32 functions and three aliases (`whois`, `Transpose-Object`, `grep`).
 
 **Network & DNS:** `Get-Whois` (alias `whois`), `Get-SSLCertificateExpirationDate`
 **Files & reports:** `ConvertTo-TransposedObject` (alias `Transpose-Object`), `New-IsoFile`
@@ -45,7 +46,7 @@ The module exports 31 functions and three aliases (`whois`, `Transpose-Object`, 
 **VMware / Nutanix / Hyper-V:** `Find-VMByIPExact`, `Find-VMByIPLike`, `Get-VMInfo`, `Get-VMInfoAllVMs`, `Connect-HyperVHost`, `Disconnect-HyperVHost`, `Get-HyperVSession`, `Get-HyperVHostFromAD`
 **Sessions:** `Clear-LoggedOnSessions`, `Get-LoggedOnSessions`
 **Remote access & enablement:** `Enable-RemoteDesktop`, `Enable-WinRM`, `Enable-WinRMSSL`, `Start-RDP`
-**Workstation / server ops:** `Restart-ComputerAndPing`, `Stop-ComputerAndPing`
+**Workstation / server ops:** `Restart-ComputerAndPing`, `Stop-ComputerAndPing`, `Update-PowerShell`
 **Configuration:** `Get-AdminConfig`, `Set-AdminConfig`
 
 ## Command Reference
@@ -275,6 +276,19 @@ Restart-ComputerAndPing -ComputerName Workstation01
 
 ```powershell
 Stop-ComputerAndPing -ComputerName Workstation01
+```
+
+#### `Update-PowerShell`
+- Updates PowerShell 7 to the latest release. Checks the latest version and skips
+  if already current; prefers `winget`, falls back to the official
+  `aka.ms/install-powershell.ps1 -UseMSI` bootstrap (`-UseMSI` forces it). The MSI
+  path needs an elevated session. Supports `-WhatIf`, `-Preview`, `-Quiet`.
+- You update the pwsh you launch next; the current session keeps its version.
+
+```powershell
+Update-PowerShell            # update to latest stable if newer
+Update-PowerShell -WhatIf    # show what would happen, no install
+Update-PowerShell -UseMSI -Quiet
 ```
 
 ### Configuration

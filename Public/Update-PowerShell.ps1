@@ -19,14 +19,29 @@ Function Update-PowerShell {
           - Installs software, so it supports -WhatIf/-Confirm and defaults to
             ConfirmImpact High (it prompts before changing anything).
 
+        For a specific version (including reverting to an older 7.x) or to list recent
+        releases, -Version / -ListVersions delegate to the standalone, in-place MSI
+        installer shipped alongside the module (Install-PowerShell7.ps1). That same
+        script can BOOTSTRAP PowerShell 7 from Windows PowerShell 5.1, where this
+        module cannot load -- run it directly there.
+
         You are updating the pwsh you launch NEXT -- the current session keeps its
         version until you start a new one.
 
+    .PARAMETER Version
+        Install (or revert to) an exact version, e.g. 7.4.6. Delegates to
+        Install-PowerShell7.ps1 (in-place MSI). Skips the "already latest" check.
+
+    .PARAMETER ListVersions
+        List recent PowerShell releases and return, without installing anything.
+
     .PARAMETER UseMSI
         Force the install-powershell.ps1 + MSI path even when winget is available.
+        (Ignored with -Version, which always uses the per-version MSI installer.)
 
     .PARAMETER Preview
-        Install the latest preview build instead of the latest stable.
+        Install the latest preview build instead of the latest stable. With
+        -ListVersions, include preview releases in the list.
 
     .PARAMETER Force
         Install even if the running version already matches the latest release.
@@ -47,17 +62,47 @@ Function Update-PowerShell {
         Update-PowerShell -UseMSI -Quiet
         Forces the official MSI bootstrap (your proven manual method) and installs silently.
 
+    .EXAMPLE
+        Update-PowerShell -ListVersions
+        Lists recent PowerShell releases.
+
+    .EXAMPLE
+        Update-PowerShell -Version 7.4.6
+        Installs (or reverts to) exactly 7.4.6 via the in-place MSI installer.
+
     .NOTES
         Equivalent manual one-liner (what -UseMSI runs under the hood):
             Invoke-Expression "& { $(Invoke-RestMethod https://aka.ms/install-powershell.ps1) } -UseMSI"
     #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
     param(
+        [string]$Version,
+        [switch]$ListVersions,
         [switch]$UseMSI,
         [switch]$Preview,
         [switch]$Force,
         [switch]$Quiet
     )
+
+    # --- Specific-version / listing: delegate to the standalone MSI installer ---
+    # It ships beside the module (repo root => one level up from Public\) and is the
+    # single source of truth for per-version installs and reverts.
+    if ($Version -or $ListVersions) {
+        $installer = Join-Path (Split-Path -Parent $PSScriptRoot) 'Install-PowerShell7.ps1'
+        if (-not (Test-Path -LiteralPath $installer)) {
+            throw "Install-PowerShell7.ps1 not found next to the module ('$installer')."
+        }
+
+        if ($ListVersions) {
+            & $installer -ListVersions -IncludePreview:$Preview
+            return
+        }
+
+        if ($PSCmdlet.ShouldProcess("PowerShell (v$Version)", 'Install via Install-PowerShell7.ps1')) {
+            & $installer -Version $Version -Quiet:$Quiet
+        }
+        return
+    }
 
     # --- Current vs latest ---------------------------------------------------
     $current = $PSVersionTable.PSVersion

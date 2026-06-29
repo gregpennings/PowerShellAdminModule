@@ -21,7 +21,10 @@ general system administration.
 ## Requirements
 
 - PowerShell 7.0 or higher (PowerShell Core; the module no longer targets Windows
-  PowerShell 5.1 -- several functions use PowerShell 7 syntax)
+  PowerShell 5.1 -- several functions use PowerShell 7 syntax). On a machine that
+  only has Windows PowerShell 5.1, bootstrap 7 first with the bundled standalone
+  script (it is 5.1-compatible and does not need the module):
+  `powershell.exe -ExecutionPolicy Bypass -File .\Install-PowerShell7.ps1`
 - `ActiveDirectory` module for AD-related commands
 - VMware PowerCLI modules for VMware commands (`VMware.VimAutomation.Core` and related cmdlets)
 - Nutanix Prism PowerShell module for Nutanix VM commands (`Nutanix.Prism.PS.Cmds`)
@@ -283,13 +286,21 @@ Stop-ComputerAndPing -ComputerName Workstation01
   if already current; prefers `winget`, falls back to the official
   `aka.ms/install-powershell.ps1 -UseMSI` bootstrap (`-UseMSI` forces it). The MSI
   path needs an elevated session. Supports `-WhatIf`, `-Preview`, `-Quiet`.
+- `-Version x.y.z` installs (or reverts to) an exact version, and `-ListVersions`
+  lists recent releases; both delegate to `Install-PowerShell7.ps1` (in-place MSI).
 - You update the pwsh you launch next; the current session keeps its version.
 
 ```powershell
 Update-PowerShell            # update to latest stable if newer
 Update-PowerShell -WhatIf    # show what would happen, no install
+Update-PowerShell -ListVersions
+Update-PowerShell -Version 7.4.6   # install or revert to a specific version
 Update-PowerShell -UseMSI -Quiet
 ```
+
+> `Install-PowerShell7.ps1` (repo root) is a standalone, Windows PowerShell
+> 5.1-compatible installer for the same job. Use it to bootstrap PowerShell 7 on a
+> 5.1-only machine, or run `-ListVersions` / `-Version` directly.
 
 ### Configuration
 

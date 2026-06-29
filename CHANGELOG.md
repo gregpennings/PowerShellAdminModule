@@ -48,6 +48,15 @@ Major bump because the platform selector's default behavior changed (see Changed
   `https://aka.ms/install-powershell.ps1 -UseMSI` bootstrap (`-UseMSI` forces it),
   requires elevation for the MSI path, and supports `-WhatIf`/`-Confirm`,
   `-Preview`, and `-Quiet`. Module now exports 32 functions.
+  - `-ListVersions` lists recent releases; `-Version x.y.z` installs or reverts to
+    an exact version. Both delegate to the new `Install-PowerShell7.ps1`.
+- `Install-PowerShell7.ps1` (repo root) -- standalone, in-place MSI installer for
+  PowerShell 7: `-ListVersions`, `-Version` (with downgrade/revert by uninstalling
+  the newer 7.x first), `-IncludePreview`, `-Quiet`; default installs the latest
+  stable. Written in Windows PowerShell 5.1-compatible syntax (sets TLS 1.2, no PS7
+  syntax) so it can BOOTSTRAP 7 on a 5.1-only machine -- where the module, now
+  gated to 7.0, cannot load. Not a module function (the loader only dot-sources
+  Public\ and Private\); invoke it directly or via `Update-PowerShell -Version`.
 
 ### Changed
 - **Breaking:** the module now requires **PowerShell 7.0+** (`PowerShellVersion`

@@ -16,9 +16,16 @@ Function Connect-HyperVHost {
         the session's lifetime. Re-running it for a host that is already connected
         replaces the old session (so it is safe to call again after a host reboots).
 
-        With no -ComputerName, the host list comes from configuration
-        (Get-AdminConfig).HyperVHosts -- set it once with
-        Set-AdminConfig -Name HyperVHosts -Value @('host1','host2').
+        Three ways to supply the host list:
+          -ComputerName    explicit names (default: the configured HyperVHosts)
+          -FromAD          discover every Hyper-V host from Active Directory
+          (config)         with no -ComputerName, falls back to
+                           (Get-AdminConfig).HyperVHosts -- set it once with
+                           Set-AdminConfig -Name HyperVHosts -Value @('host1','host2').
+
+        -FromAD is the zero-maintenance option: it queries the "Microsoft Hyper-V"
+        service connection points each host publishes (see Get-HyperVHostFromAD), so
+        new hosts appear automatically. Use -Server for a different domain/forest.
 
         Authentication uses your current identity by default; pass -Credential for
         workgroup hosts or a separate admin account.
@@ -32,9 +39,22 @@ Function Connect-HyperVHost {
         One or more Hyper-V host names to connect. Defaults to the configured
         HyperVHosts list (Get-AdminConfig).HyperVHosts.
 
+    .PARAMETER FromAD
+        Discover the host list from Active Directory (via Get-HyperVHostFromAD)
+        instead of -ComputerName/config. Mounts every Hyper-V host AD knows about.
+
+    .PARAMETER Server
+        With -FromAD, the domain or DC to query for hosts (e.g. hci.pvt). Omit to
+        use the current domain. Ignored without -FromAD.
+
+    .PARAMETER SearchBase
+        With -FromAD, limit AD discovery to a specific OU/container DN. Ignored
+        without -FromAD.
+
     .PARAMETER Credential
         Optional credential for hosts that do not accept your current identity
-        (workgroup, different domain, or a dedicated admin account).
+        (workgroup, different domain, or a dedicated admin account). With -FromAD it
+        is also used for the AD discovery query.
 
     .PARAMETER PassThru
         Return the CIM session objects that were opened (or already open). By default
@@ -46,6 +66,14 @@ Function Connect-HyperVHost {
     .EXAMPLE
         Connect-HyperVHost -ComputerName hv01,hv02
         Opens CIM sessions to two standalone hosts using the current identity.
+
+    .EXAMPLE
+        Connect-HyperVHost -FromAD
+        Discovers every Hyper-V host in the current domain and mounts them all.
+
+    .EXAMPLE
+        Connect-HyperVHost -FromAD -Server hci.pvt
+        Same, but discovers from the hci.pvt domain (use this in your profile).
 
     .EXAMPLE
         Set-AdminConfig -Name HyperVHosts -Value @('hv01','hv02','clusternodeA','clusternodeB')
@@ -60,19 +88,38 @@ Function Connect-HyperVHost {
         Get-VMInfo SERVER01 -Platform HyperV
         After connecting, query Hyper-V like any other platform.
     #>
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'ByName')]
     [OutputType([Microsoft.Management.Infrastructure.CimSession])]
     param(
-        [Parameter(Position = 0)]
+        [Parameter(ParameterSetName = 'ByName', Position = 0)]
         [string[]]$ComputerName = $script:AdminConfig.HyperVHosts,
+
+        [Parameter(ParameterSetName = 'FromAD', Mandatory)]
+        [switch]$FromAD,
+
+        [Parameter(ParameterSetName = 'FromAD')]
+        [string]$Server,
+
+        [Parameter(ParameterSetName = 'FromAD')]
+        [string]$SearchBase,
 
         [System.Management.Automation.PSCredential]$Credential,
 
         [switch]$PassThru
     )
 
+    # Resolve the host list from AD when -FromAD; otherwise use -ComputerName/config.
+    if ($FromAD) {
+        $discParams = @{}
+        if ($Server)     { $discParams.Server     = $Server }
+        if ($SearchBase) { $discParams.SearchBase = $SearchBase }
+        if ($Credential) { $discParams.Credential = $Credential }
+        Write-Verbose "Discovering Hyper-V hosts from Active Directory$(if ($Server) { " ($Server)" })..."
+        $ComputerName = Get-HyperVHostFromAD @discParams
+    }
+
     if (-not $ComputerName) {
-        Write-Warning "No Hyper-V hosts given and none configured. Pass -ComputerName, or set them once with: Set-AdminConfig -Name HyperVHosts -Value @('host1','host2')."
+        Write-Warning "No Hyper-V hosts to connect. Pass -ComputerName, use -FromAD, or set them once with: Set-AdminConfig -Name HyperVHosts -Value @('host1','host2')."
         return
     }
 

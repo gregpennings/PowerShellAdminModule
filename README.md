@@ -35,14 +35,14 @@ result with `Get-AdminConfig`; manage the override files with `Set-AdminConfig`.
 
 ## Exported Commands
 
-The module exports 30 functions and three aliases (`whois`, `Transpose-Object`, `grep`).
+The module exports 31 functions and three aliases (`whois`, `Transpose-Object`, `grep`).
 
 **Network & DNS:** `Get-Whois` (alias `whois`), `Get-SSLCertificateExpirationDate`
 **Files & reports:** `ConvertTo-TransposedObject` (alias `Transpose-Object`), `New-IsoFile`
 **Remote system & monitoring:** `Get-Uptime`, `Get-SystemInfo`, `Get-ProfilesFromRemoteComputer`, `Remove-ProfilesFromRemoteComputer`
 **Credentials:** `Test-Credential`, `Get-MyCredential`
 **Active Directory:** `Find-ADUser`, `Get-ADUserGroupMembership`
-**VMware / Nutanix / Hyper-V:** `Find-VMByIPExact`, `Find-VMByIPLike`, `Get-VMInfo`, `Get-VMInfoAllVMs`, `Connect-HyperVHost`, `Disconnect-HyperVHost`, `Get-HyperVSession`
+**VMware / Nutanix / Hyper-V:** `Find-VMByIPExact`, `Find-VMByIPLike`, `Get-VMInfo`, `Get-VMInfoAllVMs`, `Connect-HyperVHost`, `Disconnect-HyperVHost`, `Get-HyperVSession`, `Get-HyperVHostFromAD`
 **Sessions:** `Clear-LoggedOnSessions`, `Get-LoggedOnSessions`
 **Remote access & enablement:** `Enable-RemoteDesktop`, `Enable-WinRM`, `Enable-WinRMSSL`, `Start-RDP`
 **Workstation / server ops:** `Restart-ComputerAndPing`, `Stop-ComputerAndPing`
@@ -166,15 +166,22 @@ Get-ADUserGroupMembership -GridView
   VM-info functions reuse. `Connect-HyperVHost` opens them (call it from your profile
   beside `Connect-VIServer`/`Connect-PrismCentral`); `Get-HyperVSession` lists them;
   `Disconnect-HyperVHost` closes them.
-- With no `-ComputerName`, hosts come from `(Get-AdminConfig).HyperVHosts`. Set the
-  list once with `Set-AdminConfig`. For failover clusters, list every node --
-  clustered VMs are deduped by VM id.
+- Host list sources: `-ComputerName` (explicit), `-FromAD` (discover from AD via
+  `Get-HyperVHostFromAD`), or `(Get-AdminConfig).HyperVHosts` (config fallback).
+  For failover clusters, list every node -- clustered VMs are deduped by VM id.
+- `-FromAD` is the zero-maintenance option and the recommended profile call: it
+  finds the "Microsoft Hyper-V" service connection point each host publishes in AD,
+  so new hosts appear automatically. Use `-Server` for a different domain/forest.
 
 ```powershell
-Set-AdminConfig -Name HyperVHosts -Value @('hv01','hv02','clusternodeA','clusternodeB')
-Connect-HyperVHost                 # mounts the configured hosts
-Get-HyperVSession                  # confirm what's mounted
-Connect-HyperVHost -ComputerName wrkgrp-hv -Credential (Get-Credential)
+Connect-HyperVHost -FromAD -Server hci.pvt   # discover + mount all hosts (recommended)
+Get-HyperVSession                            # confirm what's mounted
+Get-HyperVHostFromAD -Server hci.pvt         # just list what AD knows about
+
+# Explicit / config alternatives:
+Connect-HyperVHost -ComputerName hv01,hv02
+Set-AdminConfig -Name HyperVHosts -Value @('hv01','hv02')
+Connect-HyperVHost                           # mounts the configured hosts
 ```
 
 #### `Get-VMInfo`

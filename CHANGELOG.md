@@ -27,9 +27,18 @@ Major bump because the platform selector's default behavior changed (see Changed
   - `Disconnect-HyperVHost` -- closes sessions (all, or named hosts).
   Standalone and clustered hosts are both supported: list every cluster node and
   clustered VMs are deduped by VM id, so they are never double-counted.
-  Module now exports 30 functions (was 27).
+  Module now exports 31 functions (was 27).
+- `Get-HyperVHostFromAD` -- discovers Hyper-V hosts from Active Directory by
+  finding the "Microsoft Hyper-V" service connection point each host publishes
+  under its computer object, and returns their DNS host names. Catches standalone
+  hosts and every failover-cluster node (filtering by OS would miss role-enabled
+  Windows Servers). `-Server` targets a different domain/forest (e.g. `hci.pvt`).
+- `Connect-HyperVHost -FromAD` -- mounts every host `Get-HyperVHostFromAD` finds,
+  so the host list needs no manual upkeep (new hosts appear automatically). This
+  is the recommended way to wire it into a profile: `Connect-HyperVHost -FromAD`.
 - `HyperVHosts` config key (baseline empty) -- the host list `Connect-HyperVHost`
-  uses when called with no `-ComputerName`. Set it per-machine/user with
+  uses when called with no `-ComputerName` and without `-FromAD`. Set it
+  per-machine/user with
   `Set-AdminConfig -Name HyperVHosts -Value @('hv01','hv02','clusternodeA')`.
 
 ### Changed

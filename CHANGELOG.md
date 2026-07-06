@@ -5,6 +5,16 @@ Fine-grained, line-level history lives in git (`git log`, `git blame`); this
 file records the *why* in human terms, per the dated notes carried over from
 the original module header.
 
+## [3.1.0] - 2026-07-06
+
+### Added
+- `New-FolderNameWithTimestamp` -- folder counterpart to `New-FileNameWithTimestamp`.
+  Creates a `yyyyMMddHHmm[ss].Subject` folder under a parent path (optionally
+  suffixed to avoid collisions) and returns it as a `DirectoryInfo`. Exported
+  (unlike its file counterpart, which is Private) so standalone scripts outside
+  the module -- e.g. a GPO backup script that writes one report per GPO into a
+  timestamped folder -- can reuse it after `Import-Module Admin`.
+
 ## [3.0.0] - 2026-06-26
 
 Added Microsoft Hyper-V as a third VM platform alongside VMware and Nutanix.

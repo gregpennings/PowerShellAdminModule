@@ -12,7 +12,7 @@
 RootModule = 'Admin.psm1'
 
 # Version number of this module.
-ModuleVersion = '3.0.0'
+ModuleVersion = '3.1.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -78,7 +78,8 @@ FunctionsToExport = 'Clear-LoggedOnSessions', 'Connect-HyperVHost',
                'Get-LoggedOnSessions', 'Get-MyCredential',
                'Get-ProfilesFromRemoteComputer', 'Get-SSLCertificateExpirationDate',
                'Get-SystemInfo', 'Get-Uptime', 'Get-VMInfo',
-               'Get-VMInfoAllVMs', 'Get-Whois', 'New-IsoFile',
+               'Get-VMInfoAllVMs', 'Get-Whois', 'New-FolderNameWithTimestamp',
+               'New-IsoFile',
                'Remove-ProfilesFromRemoteComputer', 'Restart-ComputerAndPing',
                'Select-StringFromObject', 'Set-AdminConfig', 'Start-RDP',
                'Stop-ComputerAndPing', 'Test-Credential', 'Update-PowerShell'

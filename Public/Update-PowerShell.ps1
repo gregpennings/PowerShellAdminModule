@@ -44,7 +44,9 @@ Function Update-PowerShell {
         -ListVersions, include preview releases in the list.
 
     .PARAMETER Force
-        Install even if the running version already matches the latest release.
+        Install even if the running version already matches the latest release,
+        and skip the check for other running pwsh.exe processes that could lock
+        files the update needs to replace.
 
     .PARAMETER Quiet
         Run the installer silently (no UI).
@@ -142,6 +144,15 @@ Function Update-PowerShell {
         }
     }
 
+    # Other running pwsh.exe processes (including VSCode integrated terminals)
+    # can lock files this install needs to replace, letting the installer
+    # silently no-op or leave a half-updated state that winget later reads as
+    # "already current". Skippable with -Force since you know what you're doing.
+    $otherPwsh = Get-Process -Name pwsh -ErrorAction SilentlyContinue | Where-Object { $_.Id -ne $PID }
+    if ($otherPwsh -and -not $Force -and -not $WhatIfPreference) {
+        throw "Other pwsh.exe processes are running (PID(s): $($otherPwsh.Id -join ', ')) and may lock files this update needs to replace. Close all other PowerShell 7 sessions (including VSCode integrated terminals), then retry. Use -Force to proceed anyway."
+    }
+
     if (-not $PSCmdlet.ShouldProcess("PowerShell ($target)", "Update via $method")) { return }
 
     # --- Execute -------------------------------------------------------------
@@ -149,7 +160,12 @@ Function Update-PowerShell {
         'Winget' {
             $id = if ($Preview) { 'Microsoft.PowerShell.Preview' } else { 'Microsoft.PowerShell' }
             $wgArgs = @('install', '--id', $id, '--source', 'winget',
-                        '--accept-source-agreements', '--accept-package-agreements')
+                        '--accept-source-agreements', '--accept-package-agreements',
+                        '--force')
+            # Target the version this function already resolved (GitHub releases)
+            # rather than trusting winget's own installed/upgrade-available check,
+            # which can be stale.
+            if ($latest) { $wgArgs += @('--version', "$latest") }
             if ($Quiet) { $wgArgs += '--silent' }
             Write-Verbose "winget $($wgArgs -join ' ')"
             & winget @wgArgs

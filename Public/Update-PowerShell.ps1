@@ -44,7 +44,9 @@ Function Update-PowerShell {
         -ListVersions, include preview releases in the list.
 
     .PARAMETER Force
-        Install even if the running version already matches the latest release.
+        Install even if the running version already matches the latest release,
+        and close other running pwsh.exe processes (that could lock files the
+        update needs to replace) without prompting first.
 
     .PARAMETER Quiet
         Run the installer silently (no UI).
@@ -142,14 +144,39 @@ Function Update-PowerShell {
         }
     }
 
+    # Other running pwsh.exe processes (including VSCode integrated terminals)
+    # can lock files this install needs to replace, letting the installer
+    # silently no-op or leave a half-updated state that winget later reads as
+    # "already current". Offer to close them rather than just failing.
+    $otherPwsh = Get-Process -Name pwsh -ErrorAction SilentlyContinue | Where-Object { $_.Id -ne $PID }
+    if ($otherPwsh -and -not $WhatIfPreference) {
+        if (-not $Force) {
+            Write-Host "The following other pwsh.exe processes are running and may lock files this update needs to replace:" -ForegroundColor Yellow
+            $otherPwsh | Select-Object Id, StartTime, Path | Format-Table -AutoSize | Out-Host
+            $response = Read-Host "Close them and proceed? Y/N [Enter for 'Y']"
+            if ($response -match '^(?i)n') {
+                Write-Host "Update cancelled." -ForegroundColor Yellow
+                return
+            }
+        }
+        $otherPwsh | Stop-Process -Force
+    }
+
     if (-not $PSCmdlet.ShouldProcess("PowerShell ($target)", "Update via $method")) { return }
+
+    Write-Host "Once install begins, close this pwsh window." -ForegroundColor Cyan
 
     # --- Execute -------------------------------------------------------------
     switch ($method) {
         'Winget' {
             $id = if ($Preview) { 'Microsoft.PowerShell.Preview' } else { 'Microsoft.PowerShell' }
             $wgArgs = @('install', '--id', $id, '--source', 'winget',
-                        '--accept-source-agreements', '--accept-package-agreements')
+                        '--accept-source-agreements', '--accept-package-agreements',
+                        '--force')
+            # Target the version this function already resolved (GitHub releases)
+            # rather than trusting winget's own installed/upgrade-available check,
+            # which can be stale.
+            if ($latest) { $wgArgs += @('--version', "$latest") }
             if ($Quiet) { $wgArgs += '--silent' }
             Write-Verbose "winget $($wgArgs -join ' ')"
             & winget @wgArgs

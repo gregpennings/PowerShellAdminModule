@@ -45,8 +45,8 @@ Function Update-PowerShell {
 
     .PARAMETER Force
         Install even if the running version already matches the latest release,
-        and skip the check for other running pwsh.exe processes that could lock
-        files the update needs to replace.
+        and close other running pwsh.exe processes (that could lock files the
+        update needs to replace) without prompting first.
 
     .PARAMETER Quiet
         Run the installer silently (no UI).
@@ -147,13 +147,24 @@ Function Update-PowerShell {
     # Other running pwsh.exe processes (including VSCode integrated terminals)
     # can lock files this install needs to replace, letting the installer
     # silently no-op or leave a half-updated state that winget later reads as
-    # "already current". Skippable with -Force since you know what you're doing.
+    # "already current". Offer to close them rather than just failing.
     $otherPwsh = Get-Process -Name pwsh -ErrorAction SilentlyContinue | Where-Object { $_.Id -ne $PID }
-    if ($otherPwsh -and -not $Force -and -not $WhatIfPreference) {
-        throw "Other pwsh.exe processes are running (PID(s): $($otherPwsh.Id -join ', ')) and may lock files this update needs to replace. Close all other PowerShell 7 sessions (including VSCode integrated terminals), then retry. Use -Force to proceed anyway."
+    if ($otherPwsh -and -not $WhatIfPreference) {
+        if (-not $Force) {
+            Write-Host "The following other pwsh.exe processes are running and may lock files this update needs to replace:" -ForegroundColor Yellow
+            $otherPwsh | Select-Object Id, StartTime, Path | Format-Table -AutoSize | Out-Host
+            $response = Read-Host "Close them and proceed? Y/N [Enter for 'Y']"
+            if ($response -match '^(?i)n') {
+                Write-Host "Update cancelled." -ForegroundColor Yellow
+                return
+            }
+        }
+        $otherPwsh | Stop-Process -Force
     }
 
     if (-not $PSCmdlet.ShouldProcess("PowerShell ($target)", "Update via $method")) { return }
+
+    Write-Host "Once install begins, close this pwsh window." -ForegroundColor Cyan
 
     # --- Execute -------------------------------------------------------------
     switch ($method) {

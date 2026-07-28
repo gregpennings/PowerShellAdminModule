@@ -69,11 +69,11 @@ PowerShellVersion = '7.0'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'Check-CredExpiration', 'Clear-LoggedOnSessions', 'Connect-HyperVHost',
+FunctionsToExport = 'Clear-LoggedOnSessions', 'Connect-HyperVHost',
                'ConvertTo-TransposedObject', 'Disconnect-HyperVHost',
                'Enable-RemoteDesktop', 'Enable-WinRM', 'Enable-WinRMSSL',
                'Find-ADUser', 'Find-VMByIPExact', 'Find-VMByIPLike',
-               'Get-AdminConfig', 'Get-ADUserGroupMembership',
+               'Get-AdminConfig', 'Get-ADUserGroupMembership', 'Get-CredExpiration',
                'Get-HyperVHostFromAD', 'Get-HyperVSession',
                'Get-LoggedOnSessions', 'Get-MyCredential',
                'Get-ProfilesFromRemoteComputer', 'Get-SSLCertificateExpirationDate',
@@ -91,7 +91,7 @@ CmdletsToExport = @()
 # VariablesToExport = @()
 
 # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
-AliasesToExport = 'whois', 'Transpose-Object', 'grep'
+AliasesToExport = 'whois', 'Transpose-Object', 'grep', 'Check-CredExpiration'
 
 # DSC resources to export from this module
 # DscResourcesToExport = @()

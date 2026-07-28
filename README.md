@@ -10,7 +10,7 @@ general system administration.
 ## Installation
 
 1. Place the `Admin` module folder in a PowerShell module path.
-   - Example: `C:\Program Files\PowerShell\7\Modules\Admin`
+   - Example (per-user, no elevation required to write/update): `C:\Users\<username>\Documents\PowerShell\Modules\Admin`
 2. Import the module in your PowerShell session:
    ```powershell
    Import-Module Admin

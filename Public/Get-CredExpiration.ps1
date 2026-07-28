@@ -1,4 +1,4 @@
-function Check-CredExpiration {
+function Get-CredExpiration {
     <#
     .SYNOPSIS
     On-demand credential/certificate expiration checker.
@@ -36,13 +36,13 @@ function Check-CredExpiration {
     output. Off by default.
 
     .EXAMPLE
-    Check-CredExpiration
+    Get-CredExpiration
 
     .EXAMPLE
-    Check-CredExpiration -IncludeAll -ExportResults -WarningWindowDays 45
+    Get-CredExpiration -IncludeAll -ExportResults -WarningWindowDays 45
 
     .EXAMPLE
-    Check-CredExpiration -LookbackDays All -IncludeSummary
+    Get-CredExpiration -LookbackDays All -IncludeSummary
     #>
     [CmdletBinding()]
     param(
@@ -196,3 +196,5 @@ function Check-CredExpiration {
         Write-Host "Expiring Soon: $expiringCount" -ForegroundColor Yellow
     }
 }
+
+Set-Alias -Name Check-CredExpiration -Value Get-CredExpiration

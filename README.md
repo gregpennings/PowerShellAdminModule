@@ -39,11 +39,11 @@ result with `Get-AdminConfig`; manage the override files with `Set-AdminConfig`.
 
 ## Exported Commands
 
-The module exports 32 functions and three aliases (`whois`, `Transpose-Object`, `grep`).
+The module exports 32 functions and five aliases (`whois`, `Transpose-Object`, `grep`, `Get-ProfilesFromRemoteComputer`, `Remove-ProfilesFromRemoteComputer`).
 
 **Network & DNS:** `Get-Whois` (alias `whois`), `Get-SSLCertificateExpirationDate`
 **Files & reports:** `ConvertTo-TransposedObject` (alias `Transpose-Object`), `New-IsoFile`
-**Remote system & monitoring:** `Get-Uptime`, `Get-SystemInfo`, `Get-ProfilesFromRemoteComputer`, `Remove-ProfilesFromRemoteComputer`
+**Remote system & monitoring:** `Get-Uptime`, `Get-SystemInfo`, `Get-Profiles` (alias `Get-ProfilesFromRemoteComputer`), `Remove-Profiles` (alias `Remove-ProfilesFromRemoteComputer`)
 **Credentials:** `Test-Credential`, `Get-MyCredential`
 **Active Directory:** `Find-ADUser`, `Get-ADUserGroupMembership`
 **VMware / Nutanix / Hyper-V:** `Find-VMByIPExact`, `Find-VMByIPLike`, `Get-VMInfo`, `Get-VMInfoAllVMs`, `Connect-HyperVHost`, `Disconnect-HyperVHost`, `Get-HyperVSession`, `Get-HyperVHostFromAD`
@@ -107,18 +107,27 @@ Get-Uptime -ComputerName Server01
 Get-SystemInfo -ComputerName Server01
 ```
 
-#### `Get-ProfilesFromRemoteComputer`
-- Lists unloaded local user profiles on a remote computer.
+#### `Get-Profiles` (alias `Get-ProfilesFromRemoteComputer`)
+- Lists unloaded, non-special local user profiles on a computer. Defaults to the
+  local computer; pass `-ComputerName` for a remote one.
 
 ```powershell
-Get-ProfilesFromRemoteComputer -ComputerName Workstation01
+Get-Profiles -ComputerName Workstation01
 ```
 
-#### `Remove-ProfilesFromRemoteComputer`
-- Removes unloaded local user profiles from a remote computer.
+#### `Remove-Profiles` (alias `Remove-ProfilesFromRemoteComputer`)
+- Removes unloaded local user profiles from a computer.
+- Called standalone with `-ComputerName`, it removes every candidate profile on
+  that computer. Piped from `Get-Profiles` (optionally filtered first), it
+  removes only the profiles that were piped in.
 
 ```powershell
-Remove-ProfilesFromRemoteComputer -ComputerName Workstation01
+Remove-Profiles -ComputerName Workstation01
+
+# Or filter first, then remove only the matches:
+Get-Profiles -ComputerName Workstation01 |
+    Where-Object { $_.LastUseTime -lt (Get-Date).AddDays(-90) } |
+    Remove-Profiles
 ```
 
 ### Credentials and Security

@@ -12,7 +12,7 @@
 RootModule = 'Admin.psm1'
 
 # Version number of this module.
-ModuleVersion = '3.1.0'
+ModuleVersion = '3.2.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -76,11 +76,11 @@ FunctionsToExport = 'Clear-LoggedOnSessions', 'Connect-HyperVHost',
                'Get-AdminConfig', 'Get-ADUserGroupMembership', 'Get-CredExpiration',
                'Get-HyperVHostFromAD', 'Get-HyperVSession',
                'Get-LoggedOnSessions', 'Get-MyCredential',
-               'Get-ProfilesFromRemoteComputer', 'Get-SSLCertificateExpirationDate',
+               'Get-Profiles', 'Get-SSLCertificateExpirationDate',
                'Get-SystemInfo', 'Get-Uptime', 'Get-VMInfo',
                'Get-VMInfoAllVMs', 'Get-Whois', 'New-FolderNameWithTimestamp',
                'New-IsoFile',
-               'Remove-ProfilesFromRemoteComputer', 'Restart-ComputerAndPing',
+               'Remove-Profiles', 'Restart-ComputerAndPing',
                'Select-StringFromObject', 'Set-AdminConfig', 'Start-RDP',
                'Stop-ComputerAndPing', 'Test-Credential', 'Update-PowerShell'
 
@@ -91,7 +91,8 @@ CmdletsToExport = @()
 # VariablesToExport = @()
 
 # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
-AliasesToExport = 'whois', 'Transpose-Object', 'grep', 'Check-CredExpiration'
+AliasesToExport = 'whois', 'Transpose-Object', 'grep', 'Check-CredExpiration',
+               'Get-ProfilesFromRemoteComputer', 'Remove-ProfilesFromRemoteComputer'
 
 # DSC resources to export from this module
 # DscResourcesToExport = @()

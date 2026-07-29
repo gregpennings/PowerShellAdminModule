@@ -5,6 +5,23 @@ Fine-grained, line-level history lives in git (`git log`, `git blame`); this
 file records the *why* in human terms, per the dated notes carried over from
 the original module header.
 
+## [3.2.0] - 2026-07-29
+
+### Renamed (old names kept as aliases)
+- `Get-ProfilesFromRemoteComputer` -> `Get-Profiles`. Behavior unchanged; the
+  `-ComputerName` parameter already defaulted to the local computer, so the
+  "FromRemoteComputer" suffix was misleading -- it works locally or remotely.
+- `Remove-ProfilesFromRemoteComputer` -> `Remove-Profiles`.
+
+### Changed
+- `Remove-Profiles` now accepts `Win32_UserProfile` CIM instances over the
+  pipeline (new `-InputObject` parameter/parameter set), so it can consume
+  `Get-Profiles` output directly: `Get-Profiles -ComputerName X | Where-Object
+  {...} | Remove-Profiles` removes only the piped-in profiles instead of every
+  candidate on the computer. Calling it standalone with `-ComputerName` (no
+  pipeline input) is unchanged -- it still queries and removes every
+  non-loaded, non-special profile on that computer itself.
+
 ## [3.1.0] - 2026-07-06
 
 ### Added

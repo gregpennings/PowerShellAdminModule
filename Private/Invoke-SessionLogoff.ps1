@@ -22,6 +22,12 @@ function Invoke-SessionLogoff {
         $sessionName = $SessionID
         Invoke-Command -ComputerName $ComputerName -ScriptBlock { logoff $using:sessionName }
     } else {
-        Invoke-RDUserLogoff -HostServer $ComputerName -UnifiedSessionID $SessionID -Force
+        # -Confirm:$false: the caller already confirmed via ShouldProcess above this
+        # call. Without it, -Confirm on Clear-LoggedOnSessions bleeds into the
+        # RemoteDesktop module's own internal ShouldProcess calls (it builds/tears
+        # down an implicit CIM proxy module under %TEMP% on first use), prompting
+        # for unrelated "Copy File"/"Remove Directory" operations on that scratch
+        # folder -- easy to mistake for something touching a user's profile.
+        Invoke-RDUserLogoff -HostServer $ComputerName -UnifiedSessionID $SessionID -Force -Confirm:$false
     }
 }

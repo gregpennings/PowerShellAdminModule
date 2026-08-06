@@ -5,6 +5,28 @@ Fine-grained, line-level history lives in git (`git log`, `git blame`); this
 file records the *why* in human terms, per the dated notes carried over from
 the original module header.
 
+## [3.3.0] - 2026-08-06
+
+### Fixed
+- `quser` output is fixed-width, not whitespace-delimited. Both
+  `Get-LoggedOnSessions` and `Clear-LoggedOnSessions` parsed it by splitting on
+  runs of whitespace, which shifts every column left as soon as one field is
+  blank -- most commonly `SESSIONNAME` on a disconnected session with no
+  session name. On a domain controller that put the `STATE` value ("Disc")
+  into the `SessionID` slot handed to `Invoke-RDUserLogoff`, which then failed
+  converting "Disc" to `Int32`. Parsing now reads column offsets from the
+  `quser` header row instead, so a blank field no longer shifts anything.
+
+### Changed
+- `Clear-LoggedOnSessions` now accepts session objects over the pipeline (new
+  `-InputObject` parameter/parameter set), so it can consume
+  `Get-LoggedOnSessions` output directly: `Get-LoggedOnSessions -ComputerName X
+  | Where-Object {...} | Clear-LoggedOnSessions` logs off only the piped-in
+  sessions instead of every session on the computer. Calling it standalone
+  with `-ComputerName` (no pipeline input) is unchanged.
+- `Get-LoggedOnSessions` output now includes a `ComputerName` property (needed
+  so `Clear-LoggedOnSessions` knows where a piped-in session lives).
+
 ## [3.2.0] - 2026-07-29
 
 ### Renamed (old names kept as aliases)

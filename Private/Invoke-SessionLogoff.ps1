@@ -18,16 +18,21 @@ function Invoke-SessionLogoff {
         [string]$SessionID
     )
 
+    # The caller already confirmed via its own ShouldProcess before calling this.
+    # Without suppressing it here, -Confirm on Clear-LoggedOnSessions bleeds via
+    # $ConfirmPreference into whatever ShouldProcess-aware cmdlets run underneath --
+    # e.g. the RemoteDesktop module builds/tears down an implicit CIM proxy module
+    # under %TEMP% on first use, and its own internal Copy-Item/Remove-Item calls
+    # inherit that ambient preference, prompting for unrelated "Copy File"/"Remove
+    # Directory" operations on that scratch folder. Invoke-RDUserLogoff itself
+    # doesn't declare -Confirm/-WhatIf, so this has to be the preference variable,
+    # not a parameter.
+    $ConfirmPreference = 'None'
+
     if ($SessionID -match 'rdp-tcp#\d+') {
         $sessionName = $SessionID
         Invoke-Command -ComputerName $ComputerName -ScriptBlock { logoff $using:sessionName }
     } else {
-        # -Confirm:$false: the caller already confirmed via ShouldProcess above this
-        # call. Without it, -Confirm on Clear-LoggedOnSessions bleeds into the
-        # RemoteDesktop module's own internal ShouldProcess calls (it builds/tears
-        # down an implicit CIM proxy module under %TEMP% on first use), prompting
-        # for unrelated "Copy File"/"Remove Directory" operations on that scratch
-        # folder -- easy to mistake for something touching a user's profile.
-        Invoke-RDUserLogoff -HostServer $ComputerName -UnifiedSessionID $SessionID -Force -Confirm:$false
+        Invoke-RDUserLogoff -HostServer $ComputerName -UnifiedSessionID $SessionID -Force
     }
 }

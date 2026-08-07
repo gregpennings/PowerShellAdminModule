@@ -47,6 +47,10 @@ New-FileNameWithTimestamp -AppendIfExists -CreateEmptyFile
 
 Generates a unique filename in C:\temp, creates an empty file, and avoids overwriting existing files.
 
+.EXAMPLE
+nfn -Subject ActiveServers
+The module defines an 'nfn' alias for New-FileNameWithTimestamp.
+
 .NOTES
 Author: You  
 Module: Admin
@@ -112,3 +116,5 @@ function New-FileNameWithTimestamp {
 
     return [System.IO.FileInfo]::new($fullPath)
 }
+
+Set-Alias -Name nfn -Value New-FileNameWithTimestamp

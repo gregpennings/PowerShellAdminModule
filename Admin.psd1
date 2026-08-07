@@ -78,8 +78,8 @@ FunctionsToExport = 'Clear-LoggedOnSessions', 'Connect-HyperVHost',
                'Get-LoggedOnSessions', 'Get-MyCredential',
                'Get-Profiles', 'Get-SSLCertificateExpirationDate',
                'Get-SystemInfo', 'Get-Uptime', 'Get-VMInfo',
-               'Get-Whois', 'New-FolderNameWithTimestamp',
-               'New-IsoFile',
+               'Get-Whois', 'New-FileNameWithTimestamp',
+               'New-FolderNameWithTimestamp', 'New-IsoFile',
                'Remove-Profiles', 'Restart-ComputerAndPing',
                'Select-StringFromObject', 'Set-AdminConfig', 'Start-RDP',
                'Stop-ComputerAndPing', 'Test-Credential', 'Update-PowerShell'
@@ -92,7 +92,8 @@ CmdletsToExport = @()
 
 # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
 AliasesToExport = 'whois', 'Transpose-Object', 'grep', 'Check-CredExpiration',
-               'Get-ProfilesFromRemoteComputer', 'Remove-ProfilesFromRemoteComputer'
+               'Get-ProfilesFromRemoteComputer', 'Remove-ProfilesFromRemoteComputer',
+               'nfn'
 
 # DSC resources to export from this module
 # DscResourcesToExport = @()

@@ -110,10 +110,6 @@ a computer (local or remote).
 Lists VM info from VMware vCenter(s), Nutanix Prism Central(s), and
 Hyper-V host(s).
 
-### [Get-VMInfoAllVMs](Get-VMInfoAllVMs.html)
-
-Returns inventory information for all VMs across VMware, Nutanix, and/or Hyper-V.
-
 ### [Get-Whois](Get-Whois.html)
 
 Performs an RDAP (modern WHOIS) lookup for a domain.

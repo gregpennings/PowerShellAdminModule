@@ -5,6 +5,24 @@ Fine-grained, line-level history lives in git (`git log`, `git blame`); this
 file records the *why* in human terms, per the dated notes carried over from
 the original module header.
 
+## [4.0.0] - 2026-08-07
+
+### Removed (breaking)
+- `Get-VMInfoAllVMs` is no longer a module function. It was a one-off inventory
+  sweep, not a building-block cmdlet other functions call, so it moved to
+  `Scripts\Get-VMInfoAllVMs.ps1` and is now run directly
+  (`.\Get-VMInfoAllVMs.ps1`) instead of imported. No alias is provided --
+  update any callers to invoke the script by path.
+
+### Added
+- The script reports progress per platform via `Write-Progress`: "Phase N of
+  `<total>`: `<platform>`" (VMware / Nutanix / Hyper-V, in whatever subset
+  `-Platform` selects), with percent complete reflecting position within that
+  platform's VM list, not the overall run.
+- `-ExportCsv` now writes all platform CSVs into a single timestamped folder
+  (via the already-public `New-FolderNameWithTimestamp`) instead of one
+  independently-timestamped file per platform.
+
 ## [3.4.0] - 2026-08-07
 
 ### Added

@@ -39,14 +39,14 @@ result with `Get-AdminConfig`; manage the override files with `Set-AdminConfig`.
 
 ## Exported Commands
 
-The module exports 32 functions and five aliases (`whois`, `Transpose-Object`, `grep`, `Get-ProfilesFromRemoteComputer`, `Remove-ProfilesFromRemoteComputer`).
+The module exports 33 functions and five aliases (`whois`, `Transpose-Object`, `grep`, `Get-ProfilesFromRemoteComputer`, `Remove-ProfilesFromRemoteComputer`).
 
 **Network & DNS:** `Get-Whois` (alias `whois`), `Get-SSLCertificateExpirationDate`
 **Files & reports:** `ConvertTo-TransposedObject` (alias `Transpose-Object`), `New-IsoFile`
 **Remote system & monitoring:** `Get-Uptime`, `Get-SystemInfo`, `Get-Profiles` (alias `Get-ProfilesFromRemoteComputer`), `Remove-Profiles` (alias `Remove-ProfilesFromRemoteComputer`)
 **Credentials:** `Test-Credential`, `Get-MyCredential`
 **Active Directory:** `Find-ADUser`, `Get-ADUserGroupMembership`
-**VMware / Nutanix / Hyper-V:** `Find-VMByIPExact`, `Find-VMByIPLike`, `Get-VMInfo`, `Get-VMInfoAllVMs`, `Connect-HyperVHost`, `Disconnect-HyperVHost`, `Get-HyperVSession`, `Get-HyperVHostFromAD`
+**VMware / Nutanix / Hyper-V:** `Find-VMByIPExact`, `Find-VMByIPLike`, `Get-VMInfo`, `Connect-HyperVHost`, `Disconnect-HyperVHost`, `Get-HyperVSession`, `Get-HyperVHostFromAD`
 **Sessions:** `Clear-LoggedOnSessions`, `Get-LoggedOnSessions`
 **Remote access & enablement:** `Enable-RemoteDesktop`, `Enable-WinRM`, `Enable-WinRMSSL`, `Start-RDP`
 **Workstation / server ops:** `Restart-ComputerAndPing`, `Stop-ComputerAndPing`, `Update-PowerShell`
@@ -216,16 +216,6 @@ Get-VMInfo SERVER01 -Platform HyperV
 ```powershell
 Find-VMByIPExact -IP "10.1.2.3"
 Find-VMByIPLike  -IP "10.1.2"
-```
-
-#### `Get-VMInfoAllVMs`
-- Returns full inventory for all VMware, Nutanix, and/or Hyper-V VMs to the pipeline.
-- `-ExportCsv` writes one timestamped CSV per platform and returns the path(s).
-
-```powershell
-Get-VMInfoAllVMs
-Get-VMInfoAllVMs -Platform VMware | Where-Object PowerState -eq 'PoweredOn'
-Get-VMInfoAllVMs -ExportCsv
 ```
 
 ### Sessions

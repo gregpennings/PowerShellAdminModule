@@ -15,16 +15,17 @@ Progress is reported per platform as "Phase N of <total>: <platform>", with the
 percent complete reflecting how far through that platform's VM list the script is
 (not the overall run).
 
-Use -ExportCsv to write the results to CSV instead -- one file per platform, in a
-single timestamped folder (via New-FolderNameWithTimestamp). In that mode the
-script returns the file path(s) rather than the VM objects.
+Use -ExportCsv to write the results to CSV instead -- one file per platform, each
+named with the run's timestamp, all inside a single timestamped folder (via
+New-FolderNameWithTimestamp). In that mode the script returns the file path(s)
+rather than the VM objects.
 
 .PARAMETER Platform
 Which platform(s) to query: VMware, Nutanix, HyperV, or All (default).
 
 .PARAMETER ExportCsv
 Write results to CSV file(s) and return the path(s) instead of the VM objects. One
-file per platform queried, all inside one timestamped folder.
+timestamped file per platform queried, all inside one timestamped folder.
 
 .PARAMETER Path
 Parent directory for the timestamped export folder when -ExportCsv is used.
@@ -40,8 +41,9 @@ Returns only VMware VMs, filtered to those powered on.
 
 .EXAMPLE
 .\Get-VMInfoAllVMs.ps1 -ExportCsv
-Writes VMware.csv / Nutanix.csv / HyperV.csv into one timestamped folder under
-C:\temp (or the configured DefaultExportPath) and returns the file paths.
+Writes <timestamp>.VMware.csv / <timestamp>.Nutanix.csv / <timestamp>.HyperV.csv
+into one timestamped folder under C:\temp (or the configured DefaultExportPath)
+and returns the file paths.
 
 .NOTES
 Moved out of the module (Public\Get-VMInfoAllVMs.ps1) into Scripts\ -- this is a
@@ -67,8 +69,10 @@ if ($Platform -in 'Nutanix', 'All') { $phases += 'Nutanix' }
 if ($Platform -in 'HyperV', 'All')  { $phases += 'HyperV' }
 
 $exportFolder = $null
+$runTimestamp = $null
 if ($ExportCsv) {
     $exportFolder = New-FolderNameWithTimestamp -Subject 'VMInfoAllVMs' -Path $Path -IncludeSeconds
+    $runTimestamp = Get-Date -Format 'yyyyMMddHHmmss'
 }
 
 $exported = @()
@@ -184,7 +188,7 @@ foreach ($platformName in $phases) {
     Write-Progress @progress -PercentComplete 100 -CurrentOperation 'Done'
 
     if ($ExportCsv) {
-        $file = Join-Path $exportFolder.FullName "$platformName.csv"
+        $file = Join-Path $exportFolder.FullName "$runTimestamp.$platformName.csv"
         $results | Export-Csv -Path $file -NoTypeInformation
         $exported += $file
     } else {

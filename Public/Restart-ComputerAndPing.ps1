@@ -15,7 +15,10 @@ function Restart-ComputerAndPing {
 
     .OUTPUTS
         None.
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Restart-ComputerAndPing.html
+#>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
     param(
         [string]$ComputerName = $env:COMPUTERNAME

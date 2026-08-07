@@ -31,7 +31,10 @@ function Get-AdminConfig {
     .EXAMPLE
         Get-AdminConfig -ListPaths
         Shows the Repo / Machine / User config file paths and which exist.
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Get-AdminConfig.html
+#>
     [CmdletBinding()]
     param(
         [switch]$ListPaths

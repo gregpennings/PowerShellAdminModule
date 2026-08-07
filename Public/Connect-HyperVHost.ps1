@@ -87,7 +87,10 @@ Function Connect-HyperVHost {
     .EXAMPLE
         Get-VMInfo SERVER01 -Platform HyperV
         After connecting, query Hyper-V like any other platform.
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Connect-HyperVHost.html
+#>
     [CmdletBinding(DefaultParameterSetName = 'ByName')]
     [OutputType([Microsoft.Management.Infrastructure.CimSession])]
     param(

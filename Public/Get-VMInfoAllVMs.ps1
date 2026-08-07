@@ -44,7 +44,10 @@ function Get-VMInfoAllVMs {
 
     .NOTES
         Replaces the former Get-VMInfoAllVMs_CSV (which always exported to C:\temp).
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Get-VMInfoAllVMs.html
+#>
     [CmdletBinding()]
     param(
         # 'Both' retained as a back-compat synonym for 'All' (pre-Hyper-V default).

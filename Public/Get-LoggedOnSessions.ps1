@@ -26,7 +26,10 @@ function Get-LoggedOnSessions {
     .OUTPUTS
         PSCustomObject (ComputerName, UserName, SessionName, SessionID, State,
         IdleTime, LogonTime).
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Get-LoggedOnSessions.html
+#>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]
     param(

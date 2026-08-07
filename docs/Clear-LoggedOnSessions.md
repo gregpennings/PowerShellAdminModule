@@ -1,0 +1,213 @@
+---
+document type: cmdlet
+external help file: Admin-Help.xml
+HelpUri: https://gregpennings.github.io/PowerShellAdminModule/
+Locale: en-US
+Module Name: Admin
+ms.date: 08-07-2026
+PlatyPS schema version: 2024-05-01
+title: Clear-LoggedOnSessions
+---
+
+# Clear-LoggedOnSessions
+
+## SYNOPSIS
+
+Logs off user sessions on a remote computer.
+
+## SYNTAX
+
+### ByComputerName (Default)
+
+```
+Clear-LoggedOnSessions -ComputerName <string> [-Select] [-WhatIf] [-Confirm]
+```
+
+### ByPipeline
+
+```
+Clear-LoggedOnSessions -InputObject <psobject> [-WhatIf] [-Confirm]
+```
+
+## ALIASES
+
+This cmdlet has the following aliases,
+  {{Insert list of aliases}}
+
+## DESCRIPTION
+
+Two ways to use this:
+  - Standalone: pass -ComputerName and it enumerates every logged-on
+    session on that computer (via quser) and logs them all off.
+Use
+    -Select to instead choose specific sessions interactively from a
+    grid view (Out-GridView).
+  - Piped: pipe session objects in (e.g.
+from Get-LoggedOnSessions,
+    optionally filtered first) and only those exact sessions are
+    logged off.
+
+Handles both RDP-named sessions (rdp-tcp#NN, via 'logoff' on the host) and
+numeric session IDs (via Invoke-RDUserLogoff).
+
+Supports -WhatIf / -Confirm.
+Use -WhatIf to preview which sessions would be
+logged off before committing -- recommended with the clear-all default.
+
+## EXAMPLES
+
+### EXAMPLE 1
+
+Clear-LoggedOnSessions -ComputerName RDS01
+Logs off ALL sessions on RDS01.
+
+### EXAMPLE 2
+
+Clear-LoggedOnSessions -ComputerName RDS01 -WhatIf
+Shows which sessions would be logged off, without doing it.
+
+### EXAMPLE 3
+
+Clear-LoggedOnSessions -ComputerName RDS01 -Select
+Lists the sessions in a grid view; logs off only the ones you pick.
+
+### EXAMPLE 4
+
+Get-LoggedOnSessions -ComputerName RDS01 | Where-Object State -eq 'Disc' | Clear-LoggedOnSessions
+Logs off only the disconnected sessions on RDS01.
+
+## PARAMETERS
+
+### -ComputerName
+
+The remote computer whose sessions will be logged off.
+Mandatory (there is
+no local default) to avoid accidentally logging everyone off this machine.
+Ignored when sessions are piped in.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases:
+- RemoteComputerName
+ParameterSets:
+- Name: ByComputerName
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Confirm
+
+Prompts you for confirmation before running the cmdlet.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases:
+- cf
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -InputObject
+
+A session object to log off, typically piped in from Get-LoggedOnSessions.
+
+```yaml
+Type: System.Management.Automation.PSObject
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: ByPipeline
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: true
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Select
+
+Show a grid view of the sessions and log off only the ones you select,
+instead of logging off every session.
+Ignored when sessions are piped in.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: False
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: ByComputerName
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -WhatIf
+
+Runs the command in a mode that only reports what would happen without performing the actions.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases:
+- wi
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### CommonParameters
+
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
+-InformationAction, -InformationVariable, -OutBuffer, -OutVariable, -PipelineVariable,
+-ProgressAction, -Verbose, -WarningAction, and -WarningVariable. For more information, see
+[about_CommonParameters](https://go.microsoft.com/fwlink/?LinkID=113216).
+
+## INPUTS
+
+### System.Management.Automation.PSObject
+
+{{ Fill in the Description }}
+
+## OUTPUTS
+
+## NOTES
+
+## RELATED LINKS
+
+- [](https://gregpennings.github.io/PowerShellAdminModule/Clear-LoggedOnSessions.html)

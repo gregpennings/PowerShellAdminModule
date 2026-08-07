@@ -37,6 +37,9 @@ Module: Admin
 .ERROR CODES
 1001 - Failed to create the parent or timestamped folder.
 1002 - Failed to generate a unique folder name after multiple attempts.
+
+.LINK
+https://gregpennings.github.io/PowerShellAdminModule/New-FolderNameWithTimestamp.html
 #>
 
 function New-FolderNameWithTimestamp {

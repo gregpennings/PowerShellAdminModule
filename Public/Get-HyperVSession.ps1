@@ -18,7 +18,10 @@ Function Get-HyperVSession {
     .EXAMPLE
         Get-HyperVSession | Select-Object ComputerName, InstanceId
         Projects just the identity of each open session.
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Get-HyperVSession.html
+#>
     [CmdletBinding()]
     [OutputType([Microsoft.Management.Infrastructure.CimSession])]
     param()

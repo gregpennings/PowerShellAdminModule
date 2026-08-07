@@ -21,7 +21,10 @@ function Enable-WinRM {
 
     .OUTPUTS
         None.
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Enable-WinRM.html
+#>
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [string]$ComputerName = $env:COMPUTERNAME,

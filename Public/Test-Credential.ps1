@@ -23,7 +23,10 @@ function Test-Credential {
 
     .OUTPUTS
         System.Boolean
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Test-Credential.html
+#>
     [CmdletBinding()]
     [OutputType([bool])]
     param(

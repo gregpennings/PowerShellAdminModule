@@ -19,7 +19,10 @@ Function Disconnect-HyperVHost {
     .EXAMPLE
         Disconnect-HyperVHost -ComputerName hv01
         Closes just the session to hv01.
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Disconnect-HyperVHost.html
+#>
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [Parameter(Position = 0)]

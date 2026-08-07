@@ -22,7 +22,10 @@ function Enable-RemoteDesktop {
 
     .OUTPUTS
         The final Test-NetConnection RDP port-test result, when changes are made.
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Enable-RemoteDesktop.html
+#>
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [string]$ComputerName = $env:COMPUTERNAME,

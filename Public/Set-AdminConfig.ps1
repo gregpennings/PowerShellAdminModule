@@ -33,7 +33,10 @@ function Set-AdminConfig {
     .EXAMPLE
         Set-AdminConfig -Name PsExecPath -Value 'C:\tools\psexec.exe' -Scope Machine
         Sets a machine-wide PsExec path override.
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Set-AdminConfig.html
+#>
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [Parameter(Mandatory)]

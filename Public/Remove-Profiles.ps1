@@ -32,7 +32,10 @@ function Remove-Profiles {
     .EXAMPLE
         Get-Profiles -ComputerName SERVER01 | Where-Object { $_.LastUseTime -lt (Get-Date).AddDays(-90) } | Remove-Profiles
         Removes only the profiles unused for 90+ days.
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Remove-Profiles.html
+#>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High', DefaultParameterSetName = 'ByComputerName')]
     param(
         [Parameter(ParameterSetName = 'ByComputerName')]

@@ -15,7 +15,10 @@ Function Find-VMByIPExact {
         Find-VMByIPExact 10.1.2.34
         Finds the VM whose guest IP is exactly 10.1.2.34.
         Wrapper for Get-VMInfo -IPExact.
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Find-VMByIPExact.html
+#>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)][string]$IP

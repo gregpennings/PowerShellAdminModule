@@ -15,7 +15,10 @@ function Stop-ComputerAndPing {
 
     .OUTPUTS
         None.
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Stop-ComputerAndPing.html
+#>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
     param(
         [string]$ComputerName = $env:COMPUTERNAME

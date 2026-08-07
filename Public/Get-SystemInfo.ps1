@@ -28,7 +28,10 @@ function Get-SystemInfo {
     .NOTES
         Uses CIM (WS-Management) for remote queries; the target must have WinRM
         enabled. Original concept: sqlpowershell.wordpress.com.
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Get-SystemInfo.html
+#>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]

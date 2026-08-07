@@ -43,7 +43,10 @@ function Get-CredExpiration {
 
     .EXAMPLE
     Get-CredExpiration -LookbackDays All -IncludeSummary
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Get-CredExpiration.html
+#>
     [CmdletBinding()]
     param(
         [int]$WarningWindowDays = 30,

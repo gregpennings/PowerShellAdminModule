@@ -21,7 +21,10 @@ function Enable-WinRMSSL {
 
     .OUTPUTS
         None.
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Enable-WinRMSSL.html
+#>
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [string]$ComputerName = $env:COMPUTERNAME,

@@ -27,7 +27,10 @@ function Get-Whois {
 
     .NOTES
         Requires outbound HTTPS to data.iana.org and the relevant RDAP server.
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Get-Whois.html
+#>
     [CmdletBinding()]
     param([Parameter(Mandatory, ValueFromPipeline)][string]$Domain)
     process {

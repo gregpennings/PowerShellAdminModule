@@ -22,7 +22,10 @@ function Get-Profiles {
     .OUTPUTS
         CIM Win32_UserProfile instances. Pipe them to Remove-Profiles to remove
         exactly the profiles selected here.
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Get-Profiles.html
+#>
     [CmdletBinding()]
     param(
         [string]$ComputerName = $env:COMPUTERNAME

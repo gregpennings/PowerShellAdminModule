@@ -5,6 +5,16 @@ Fine-grained, line-level history lives in git (`git log`, `git blame`); this
 file records the *why* in human terms, per the dated notes carried over from
 the original module header.
 
+## [3.4.0] - 2026-08-07
+
+### Added
+- `Get-Help -Online` now opens a real page for every exported function,
+  served via GitHub Pages from `docs/`. Each function's comment-based help
+  gained a `.LINK` pointing at its page; docs are generated from that same
+  comment-based help with PlatyPS (`New-MarkdownCommandHelp`), so there's one
+  source of truth to keep updated going forward. Module overview lives at
+  the site root (`docs/index.md`).
+
 ## [3.3.0] - 2026-08-06
 
 ### Fixed

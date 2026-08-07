@@ -33,7 +33,10 @@ function Start-RDP {
         (/pass:<password>), so it is briefly visible to anyone who can enumerate
         process command lines on this machine. The stored credential is removed by a
         background job ~30 seconds later.
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Start-RDP.html
+#>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]

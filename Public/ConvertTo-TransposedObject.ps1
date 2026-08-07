@@ -24,6 +24,9 @@ Name: Transpose-Object
 Author: Markus Scholtes
 Version: 1.2 - values of 0, $FALSE or "" not longer identified as $NULL
 Creation Date: 20/03/2023
+
+.LINK
+https://gregpennings.github.io/PowerShellAdminModule/ConvertTo-TransposedObject.html
 #>
 function ConvertTo-TransposedObject
 { [CmdletBinding()]

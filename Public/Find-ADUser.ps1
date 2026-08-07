@@ -23,6 +23,9 @@ Supports -WhatIf and -Confirm via CmdletBinding.
 
 .LINK
 Get-ADUser
+
+.LINK
+https://gregpennings.github.io/PowerShellAdminModule/Find-ADUser.html
 #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     [OutputType([Microsoft.ActiveDirectory.Management.ADUser])]

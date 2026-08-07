@@ -59,7 +59,10 @@ Function Get-VMInfo {
     .EXAMPLE
         Get-VMInfo SERVER01 | Select-Object Name, DnsName, IPAddresses
         Looks up a VM by name and projects just the identity columns.
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Get-VMInfo.html
+#>
     [CmdletBinding(DefaultParameterSetName = 'ByName')]
     param(
         [Parameter(ParameterSetName = 'ByName', Position = 0)]

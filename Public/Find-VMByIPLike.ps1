@@ -16,7 +16,10 @@ Function Find-VMByIPLike {
         Finds VMs whose guest IP contains "10.1.2" (e.g. an entire subnet).
         Shorten the fragment (10.1.2 -> 10.1) to widen the match.
         Wrapper for Get-VMInfo -IPLike.
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Find-VMByIPLike.html
+#>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)][string]$IP

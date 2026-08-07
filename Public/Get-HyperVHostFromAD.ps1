@@ -43,7 +43,10 @@ Function Get-HyperVHostFromAD {
     .EXAMPLE
         Connect-HyperVHost -ComputerName (Get-HyperVHostFromAD -Server hci.pvt)
         Discovers and mounts them in one step (or just: Connect-HyperVHost -FromAD -Server hci.pvt).
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Get-HyperVHostFromAD.html
+#>
     [CmdletBinding()]
     [OutputType([string])]
     param(

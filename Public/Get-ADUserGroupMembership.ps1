@@ -39,7 +39,10 @@ function Get-ADUserGroupMembership {
 
     .OUTPUTS
         Microsoft.ActiveDirectory.Management.ADGroup (Name).
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Get-ADUserGroupMembership.html
+#>
     [CmdletBinding(DefaultParameterSetName = 'ByName')]
     param(
         [Parameter(ParameterSetName = 'ByName', ValueFromPipeline, ValueFromPipelineByPropertyName)]

@@ -46,7 +46,10 @@ function Clear-LoggedOnSessions {
     .EXAMPLE
         Get-LoggedOnSessions -ComputerName RDS01 | Where-Object State -eq 'Disc' | Clear-LoggedOnSessions
         Logs off only the disconnected sessions on RDS01.
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Clear-LoggedOnSessions.html
+#>
     [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'ByComputerName')]
     param(
         [Parameter(ParameterSetName = 'ByComputerName', Mandatory = $true)]

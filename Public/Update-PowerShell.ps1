@@ -75,7 +75,10 @@ Function Update-PowerShell {
     .NOTES
         Equivalent manual one-liner (what -UseMSI runs under the hood):
             Invoke-Expression "& { $(Invoke-RestMethod https://aka.ms/install-powershell.ps1) } -UseMSI"
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Update-PowerShell.html
+#>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
     param(
         [string]$Version,

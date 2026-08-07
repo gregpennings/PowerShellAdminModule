@@ -22,7 +22,10 @@ function Get-SSLCertificateExpirationDate {
 
     .OUTPUTS
         System.DateTime
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Get-SSLCertificateExpirationDate.html
+#>
     [CmdletBinding()]
     [OutputType([datetime])]
     param(

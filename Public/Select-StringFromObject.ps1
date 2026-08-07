@@ -63,7 +63,10 @@ function Select-StringFromObject {
         Because it searches the FORMATTED text, matches depend on how the objects
         display (default table columns, truncation at the render width). For matching
         on actual property values, prefer Where-Object.
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Select-StringFromObject.html
+#>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory, Position = 0)]

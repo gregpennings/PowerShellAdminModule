@@ -30,7 +30,10 @@ function New-IsoFile {
         NAME:    New-IsoFile
         AUTHOR:  Chris Wu
         LASTEDIT: 03/23/2016 14:46:50
-  #>
+  
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/New-IsoFile.html
+#>
 
    
   [CmdletBinding(DefaultParameterSetName='Source')]Param( 

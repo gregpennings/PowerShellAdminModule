@@ -19,7 +19,10 @@ function Get-Uptime {
 
     .OUTPUTS
         PSCustomObject (CSName, Caption, ServicePackMajorVersion, OSArchitecture, LastBootUpTime).
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Get-Uptime.html
+#>
     [CmdletBinding()]
     param(
         [Parameter(ValueFromPipeline, ValueFromPipelineByPropertyName)]

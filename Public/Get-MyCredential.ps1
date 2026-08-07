@@ -20,7 +20,10 @@ function Get-MyCredential {
     .NOTES
         The stored password is DPAPI-protected: it can only be decrypted by the same
         Windows user on the same machine that created the file.
-    #>
+    
+    .LINK
+    https://gregpennings.github.io/PowerShellAdminModule/Get-MyCredential.html
+#>
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingPlainTextForPassword', 'CredPath',
         Justification = 'CredPath is a file path to a CLIXML credential file, not a password.')]

@@ -82,7 +82,8 @@ FunctionsToExport = 'Clear-LoggedOnSessions', 'Connect-HyperVHost',
                'New-FolderNameWithTimestamp', 'New-IsoFile',
                'Remove-Profiles', 'Restart-ComputerAndPing',
                'Select-StringFromObject', 'Set-AdminConfig', 'Start-RDP',
-               'Stop-ComputerAndPing', 'Test-Credential', 'Update-PowerShell'
+               'Stop-ComputerAndPing', 'Test-Credential', 'Update-PowerShell',
+               'Update-VMInfoCache'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()

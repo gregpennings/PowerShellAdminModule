@@ -5,6 +5,14 @@ Fine-grained, line-level history lives in git (`git log`, `git blame`); this
 file records the *why* in human terms, per the dated notes carried over from
 the original module header.
 
+## [4.1.0] - 2026-08-14
+
+### Changed
+- `Clear-LoggedOnSessions -Select` now defaults to on: running the command
+  with just `-ComputerName` opens the grid-view picker instead of logging off
+  every session outright. Pass `-Select:$false` to get the old clear-all
+  behavior.
+
 ## [4.0.0] - 2026-08-07
 
 ### Removed (breaking)

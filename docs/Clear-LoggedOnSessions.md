@@ -38,10 +38,11 @@ This cmdlet has the following aliases,
 
 Two ways to use this:
   - Standalone: pass -ComputerName and it enumerates every logged-on
-    session on that computer (via quser) and logs them all off.
-Use
-    -Select to instead choose specific sessions interactively from a
-    grid view (Out-GridView).
+    session on that computer (via quser).
+By default (-Select is on)
+    it shows them in a grid view (Out-GridView) so you pick which ones
+    to log off. Pass -Select:$false to log off every session without
+    the picker.
   - Piped: pipe session objects in (e.g.
 from Get-LoggedOnSessions,
     optionally filtered first) and only those exact sessions are
@@ -52,24 +53,24 @@ numeric session IDs (via Invoke-RDUserLogoff).
 
 Supports -WhatIf / -Confirm.
 Use -WhatIf to preview which sessions would be
-logged off before committing -- recommended with the clear-all default.
+logged off before committing -- recommended with -Select:$false.
 
 ## EXAMPLES
 
 ### EXAMPLE 1
 
 Clear-LoggedOnSessions -ComputerName RDS01
-Logs off ALL sessions on RDS01.
+Lists the sessions on RDS01 in a grid view; logs off only the ones you pick.
 
 ### EXAMPLE 2
 
-Clear-LoggedOnSessions -ComputerName RDS01 -WhatIf
-Shows which sessions would be logged off, without doing it.
+Clear-LoggedOnSessions -ComputerName RDS01 -Select:$false
+Logs off ALL sessions on RDS01, no picker.
 
 ### EXAMPLE 3
 
-Clear-LoggedOnSessions -ComputerName RDS01 -Select
-Lists the sessions in a grid view; logs off only the ones you pick.
+Clear-LoggedOnSessions -ComputerName RDS01 -Select:$false -WhatIf
+Shows which sessions would be logged off, without doing it.
 
 ### EXAMPLE 4
 
@@ -148,13 +149,14 @@ HelpMessage: ''
 
 ### -Select
 
-Show a grid view of the sessions and log off only the ones you select,
-instead of logging off every session.
+Show a grid view of the sessions and log off only the ones you select.
+Defaults to on. Pass -Select:$false to log off every session on the
+computer without the picker.
 Ignored when sessions are piped in.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-DefaultValue: False
+DefaultValue: 'True'
 SupportsWildcards: false
 Aliases: []
 ParameterSets:

@@ -32,6 +32,130 @@ general system administration.
   module imports without it, but the Hyper-V code paths require it)
 - Internet access for `Get-Whois` and SSL certificate checks
 
+## New Workstation / New Account Checklist
+
+Everything below is per-Windows-account: a fresh machine has none of it, and
+neither does a second account on a machine that's already set up for your
+main one -- e.g. a tiered admin account such as `ADM<name>` used for AD/infra
+work. Run this checklist logged in as (or elevated as) whichever account will
+actually run the module.
+
+1. **PowerShell 7+.** Check with `$PSVersionTable.PSVersion`. If it's below
+   7.0 (or `pwsh` doesn't exist), bootstrap it with the bundled 5.1-compatible
+   script: `powershell.exe -ExecutionPolicy Bypass -File .\Install-PowerShell7.ps1`
+2. **Git**, to clone/pull the repo. Check with `git --version`.
+   - If `winget` itself isn't recognized, bootstrap it first -- this happens
+     on an account that's never touched the Microsoft Store (Store apps are
+     registered per-profile, not per-machine, so a fresh account -- e.g. a
+     tiered admin account -- can lack it even though it's provisioned on the
+     box). No elevation needed for this part:
+     ```powershell
+     Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+     Install-Module Microsoft.WinGet.Client -Scope CurrentUser -Force -AllowClobber
+     Repair-WinGetPackageManager -Latest -Force
+     winget --version   # confirm it now returns a version
+     ```
+     `Install-PackageProvider -Name NuGet` commonly fails first with "No
+     match was found ... requires 'PackageManagement' and 'Provider' tags"
+     on PowerShell 7 -- that's a known, benign PS7/`PackageManagement`
+     quirk, not a real blocker. Skip it and continue; `Install-Module` and
+     `Repair-WinGetPackageManager` still succeed without it.
+   - Then install Git itself. This step *does* need elevation (Run as
+     Administrator), since it writes to `Program Files`:
+     ```powershell
+     winget install --id Git.Git --source winget --scope machine --accept-package-agreements --accept-source-agreements
+     ```
+     Open a fresh terminal afterward -- PATH only updates in new sessions.
+3. **Clone the module into that account's own per-user module path** --
+   specifically the *first* entry of `$env:PSModulePath`, normally
+   `C:\Users\<account>\Documents\PowerShell\Modules\Admin`. Check the actual
+   first entry with `($env:PSModulePath -split ';')[0]` rather than assuming,
+   since it can vary.
+   ```powershell
+   git clone <repo-url> (Join-Path ($env:PSModulePath -split ';')[0] 'Admin')
+   ```
+   This has to be a normal per-account git clone, not a shared/machine-wide
+   copy: the profile script (step 4) keeps it current by running `git pull`
+   against exactly this path on every launch. It also must NOT live inside
+   the versioned `...\PowerShell\7\Modules` folder -- that's tied to the PS7
+   install itself and isn't a stable place for a git working tree (this is
+   why it was moved out to a normal per-account module path).
+4. **Deploy the PowerShell profile.** The `Admin` module import, its
+   auto-update (`git pull`), and the startup connections to vCenter/Prism/
+   Hyper-V all live in the separate, private **`PowerShellCustomProfile`**
+   repo, not in this one -- see that repo's own README for what it does and
+   why it's private. Clone it, then point `$PROFILE` at its
+   `Microsoft.PowerShell_profile.ps1` (find your path with `$PROFILE`; each
+   account/host combination has its own):
+   ```powershell
+   # Symlink (elevated), or dot-source from a tiny $PROFILE -- see that repo's README
+   New-Item -ItemType SymbolicLink -Path $PROFILE -Target '<path-to>\PowerShellCustomProfile\Microsoft.PowerShell_profile.ps1'
+   ```
+   If you're not using that profile on this account, at minimum add
+   `Import-Module Admin` to `$PROFILE` yourself so the module loads on
+   startup.
+5. **Install the dependency modules** under that account, or once with
+   `-Scope AllUsers` (elevated) to cover every account on the box at once --
+   unlike the `Admin` module itself, these are ordinary gallery modules with
+   no auto-update tie to a specific path:
+   - `ActiveDirectory`: an RSAT feature on client Windows, not a gallery
+     module -- `Add-WindowsCapability -Online -Name Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0`.
+     First run can sit at "Running" for 15-20+ minutes fetching the payload
+     from Windows Update -- that's normal, not a hang. If it's still
+     `NotPresent` after a long wait, retry via `DISM /Online /Add-Capability
+     /CapabilityName:Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0` instead --
+     it reports real percent progress, so you can tell slow from stuck. Zero
+     movement there points to a blocked network path to Windows Update, not
+     a PowerShell problem.
+   - VMware PowerCLI: `Install-Module VMware.PowerCLI -Scope AllUsers -Force`.
+     Also run `Set-PowerCLIConfiguration -Scope AllUsers -ParticipateInCeip
+     $false -Confirm:$false` once -- otherwise the first `Connect-VIServer`
+     triggers an interactive CEIP prompt, which will hang the profile script
+     (step 4) the first time it runs unattended.
+   - Nutanix: `Install-Module Nutanix.Cli -Scope AllUsers -Force -AllowClobber`.
+     `-AllowClobber` is required, not optional here: this package installs
+     `Nutanix.Prism.PS.Cmds`, which defines cmdlets with the same names as
+     VMware PowerCLI (`Get-VM`, `New-VM`, `Start-VM`, etc.) -- expected, and
+     exactly why this module's own `Get-VMInfo` exists to normalize across
+     platforms instead of relying on the raw cmdlet names.
+   - `Hyper-V`: a Windows feature, not a gallery module. Every workstation
+     running this profile needs it -- but only the PowerShell management
+     tools sub-feature, not the full role, since `Connect-HyperVHost` reaches
+     hosts remotely via CIM sessions rather than running VMs locally:
+     `Enable-WindowsOptionalFeature -Online -FeatureName
+     Microsoft-Hyper-V-Management-PowerShell -All -NoRestart`. Only use the
+     full role (`Microsoft-Hyper-V-All`, requires a reboot) if that
+     workstation will actually host VMs itself.
+   - OpenSSH Client: often already present by default on Windows 10
+     (1809+)/11 -- check first with `Get-WindowsCapability -Online -Name
+     OpenSSH.Client*`. If `NotPresent`:
+     `Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0`.
+   - OpenSSL at `C:\Program Files\OpenSSL` -- not required by this module,
+     but the profile script (step 4) adds it to `PATH`/`OPENSSL_CONF` on
+     every launch and will warn if it's missing.
+   These are soft dependencies: `Import-Module Admin` succeeds without them,
+   and only the commands for a given platform fail until it's installed.
+6. **Redo configuration and credentials -- none of this carries over between
+   accounts, even on the same machine:**
+   - `Set-AdminConfig` at the default `-Scope User` writes to `%APPDATA%\Admin`
+     (per-profile). Either rerun it under the new account, or use
+     `-Scope Machine` (`%ProgramData%\Admin`, shared by every account on the
+     box) for settings everyone should share, e.g.
+     `Set-AdminConfig -Name HyperVHosts -Value @('hv01','hv02') -Scope Machine`.
+   - Anything saved via `Get-MyCredential` or `Start-RDP` is DPAPI-encrypted
+     to the specific Windows account + machine that created it -- a CLIXML
+     saved under one account cannot be decrypted by another. Re-run the
+     credential prompt once under the new account.
+   - If you deployed `PowerShellCustomProfile` in step 4: it reads its own
+     DPAPI-protected passwords for the vCenter/Prism connections from
+     `C:\ProgramData\PowerShellTranscripts\spw.txt` / `spw2.txt`. Those are
+     also account+machine-locked -- recreate them under the new account per
+     that repo's README (`Read-Host -AsSecureString` piped through
+     `ConvertFrom-SecureString` to each file), and make sure
+     `C:\ProgramData\PowerShellTranscripts` exists first.
+7. **Verify:** `Get-Module Admin -ListAvailable`, then `Get-AdminConfig` to
+   confirm the merged settings look right.
+
 ## Configuration
 
 Settings are layered (repo defaults → per-machine → per-user). View the merged

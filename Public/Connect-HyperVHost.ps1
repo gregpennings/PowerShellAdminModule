@@ -111,6 +111,14 @@ Function Connect-HyperVHost {
         [switch]$PassThru
     )
 
+    # The in-box Hyper-V module is Windows PowerShell (Desktop) only; on PowerShell 7,
+    # Get-VMInfo's module-qualified Hyper-V\Get-VM calls fail to auto-load it unless
+    # it's already been brought in through the compatibility shim. Do that here, once,
+    # since this is the function callers already run before touching Hyper-V.
+    if (-not (Get-Module -Name Hyper-V)) {
+        Import-Module Hyper-V -UseWindowsPowerShell -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+    }
+
     # Resolve the host list from AD when -FromAD; otherwise use -ComputerName/config.
     if ($FromAD) {
         $discParams = @{}

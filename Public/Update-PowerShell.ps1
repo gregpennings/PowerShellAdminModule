@@ -127,7 +127,7 @@ Function Update-PowerShell {
     }
 
     if ($latest -and -not $Force -and $current -ge $latest) {
-        Write-Host "PowerShell is already current ($current >= $latest). Use -Force to reinstall." -ForegroundColor Green
+        Write-Information "PowerShell is already current ($current >= $latest). Use -Force to reinstall." -InformationAction Continue
         return
     }
 
@@ -154,11 +154,11 @@ Function Update-PowerShell {
     $otherPwsh = Get-Process -Name pwsh -ErrorAction SilentlyContinue | Where-Object { $_.Id -ne $PID }
     if ($otherPwsh -and -not $WhatIfPreference) {
         if (-not $Force) {
-            Write-Host "The following other pwsh.exe processes are running and may lock files this update needs to replace:" -ForegroundColor Yellow
+            Write-Warning "The following other pwsh.exe processes are running and may lock files this update needs to replace:"
             $otherPwsh | Select-Object Id, StartTime, Path | Format-Table -AutoSize | Out-Host
             $response = Read-Host "Close them and proceed? Y/N [Enter for 'Y']"
             if ($response -match '^(?i)n') {
-                Write-Host "Update cancelled." -ForegroundColor Yellow
+                Write-Warning "Update cancelled."
                 return
             }
         }
@@ -167,7 +167,7 @@ Function Update-PowerShell {
 
     if (-not $PSCmdlet.ShouldProcess("PowerShell ($target)", "Update via $method")) { return }
 
-    Write-Host "Once install begins, close this pwsh window." -ForegroundColor Cyan
+    Write-Information "Once install begins, close this pwsh window." -InformationAction Continue
 
     # --- Execute -------------------------------------------------------------
     switch ($method) {
@@ -195,5 +195,5 @@ Function Update-PowerShell {
         }
     }
 
-    Write-Host "Update via $method finished. Start a NEW pwsh session to use the updated version." -ForegroundColor Cyan
+    Write-Information "Update via $method finished. Start a NEW pwsh session to use the updated version." -InformationAction Continue
 }

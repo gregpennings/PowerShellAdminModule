@@ -18,7 +18,7 @@ Administrative helper functions for VMware, Nutanix, Active Directory, and Windo
 
 ## Admin
 
-### [Clear-LoggedOnSessions](Clear-LoggedOnSessions.html)
+### [Clear-LoggedOnSession](Clear-LoggedOnSession.html)
 
 Logs off user sessions on a remote computer.
 
@@ -80,7 +80,7 @@ Discovers Hyper-V hosts from Active Directory and returns their DNS host names.
 
 Returns the Hyper-V CIM sessions currently mounted by Connect-HyperVHost.
 
-### [Get-LoggedOnSessions](Get-LoggedOnSessions.html)
+### [Get-LoggedOnSession](Get-LoggedOnSession.html)
 
 Returns the logged-on sessions of a computer as objects.
 
@@ -88,7 +88,7 @@ Returns the logged-on sessions of a computer as objects.
 
 Loads a stored PSCredential from a file, creating it on first use.
 
-### [Get-Profiles](Get-Profiles.html)
+### [Get-Profile](Get-Profile.html)
 
 Lists non-loaded, non-special user profiles on a computer.
 
@@ -122,7 +122,7 @@ Performs an RDAP (modern WHOIS) lookup for a domain.
 
 Creates a new .iso file.
 
-### [Remove-Profiles](Remove-Profiles.html)
+### [Remove-Profile](Remove-Profile.html)
 
 Removes non-loaded, non-special user profiles from a computer.
 

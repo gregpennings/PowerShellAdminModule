@@ -87,25 +87,25 @@ function Get-CredExpiration {
 
     # ---- Connect to Graph (device code avoids the WAM broker hang; disabling WAM
     #      stops it from corrupting the device-code token on the very next call) ----
-    Write-Host "Connecting to Microsoft Graph..." -ForegroundColor Cyan
+    Write-Information "Connecting to Microsoft Graph..." -InformationAction Continue
     try {
         Set-MgGraphOption -DisableLoginByWAM $true
         Connect-MgGraph -NoWelcome -UseDeviceCode -ErrorAction Stop
         if (-not (Get-MgContext)) {
             throw "No active Graph context after Connect-MgGraph."
         }
-        Write-Host "Connected." -ForegroundColor Green
+        Write-Information "Connected." -InformationAction Continue
     } catch {
-        Write-Host "Failed to connect to Graph. Error: $_" -ForegroundColor Red
+        Write-Error "Failed to connect to Graph. Error: $_"
         return
     }
 
     # ---- App Registrations (live) ----
-    Write-Host "Pulling App Registrations from Graph..." -ForegroundColor Cyan
+    Write-Information "Pulling App Registrations from Graph..." -InformationAction Continue
     try {
         $apps = Get-MgApplication -All -PageSize 999 -ErrorAction Stop
     } catch {
-        Write-Host "Failed to pull App Registrations. Error: $_" -ForegroundColor Red
+        Write-Error "Failed to pull App Registrations. Error: $_"
         return
     }
 
@@ -137,11 +137,11 @@ function Get-CredExpiration {
     }
 
     # ---- Enterprise Applications / Service Principals (live) ----
-    Write-Host "Pulling Enterprise Applications from Graph..." -ForegroundColor Cyan
+    Write-Information "Pulling Enterprise Applications from Graph..." -InformationAction Continue
     try {
         $sps = Get-MgServicePrincipal -All -PageSize 999 -ErrorAction Stop
     } catch {
-        Write-Host "Failed to pull Enterprise Applications. Error: $_" -ForegroundColor Red
+        Write-Error "Failed to pull Enterprise Applications. Error: $_"
         return
     }
 
@@ -190,13 +190,13 @@ function Get-CredExpiration {
         Add-Content -Path $LogPath -Value $summary
         $flagged | Export-Csv -Path $CsvOutPath -NoTypeInformation
 
-        Write-Host "Full results: $CsvOutPath" -ForegroundColor Green
-        Write-Host "Log updated: $LogPath" -ForegroundColor Green
+        Write-Information "Full results: $CsvOutPath" -InformationAction Continue
+        Write-Information "Log updated: $LogPath" -InformationAction Continue
     }
 
     if ($IncludeSummary) {
-        Write-Host "`nExpired: $expiredCount" -ForegroundColor Red
-        Write-Host "Expiring Soon: $expiringCount" -ForegroundColor Yellow
+        Write-Information "`nExpired: $expiredCount" -InformationAction Continue
+        Write-Information "Expiring Soon: $expiringCount" -InformationAction Continue
     }
 }
 

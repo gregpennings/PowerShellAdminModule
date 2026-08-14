@@ -1,4 +1,4 @@
-function Remove-Profiles {
+function Remove-Profile {
     <#
     .SYNOPSIS
         Removes non-loaded, non-special user profiles from a computer.
@@ -8,7 +8,7 @@ function Remove-Profiles {
           - Standalone: pass -ComputerName and it queries and removes every
             non-loaded, non-special Win32_UserProfile on that computer itself
             (same behavior as the old Remove-ProfilesFromRemoteComputer).
-          - Piped: pipe Win32_UserProfile instances in (e.g. from Get-Profiles,
+          - Piped: pipe Win32_UserProfile instances in (e.g. from Get-Profile,
             optionally filtered first) and only those exact profiles are removed.
         This permanently removes the profile(s), including on-disk data.
         Supports -WhatIf / -Confirm and prompts before each deletion by default.
@@ -19,22 +19,22 @@ function Remove-Profiles {
 
     .PARAMETER InputObject
         A Win32_UserProfile CIM instance to remove, typically piped in from
-        Get-Profiles.
+        Get-Profile.
 
     .EXAMPLE
-        Remove-Profiles -ComputerName SERVER01 -WhatIf
+        Remove-Profile -ComputerName SERVER01 -WhatIf
         Shows which profiles would be removed without deleting them.
 
     .EXAMPLE
-        Remove-Profiles -ComputerName SERVER01 -Confirm:$false
+        Remove-Profile -ComputerName SERVER01 -Confirm:$false
         Removes every candidate profile on SERVER01 without prompting.
 
     .EXAMPLE
-        Get-Profiles -ComputerName SERVER01 | Where-Object { $_.LastUseTime -lt (Get-Date).AddDays(-90) } | Remove-Profiles
+        Get-Profile -ComputerName SERVER01 | Where-Object { $_.LastUseTime -lt (Get-Date).AddDays(-90) } | Remove-Profile
         Removes only the profiles unused for 90+ days.
-    
+
     .LINK
-    https://gregpennings.github.io/PowerShellAdminModule/Remove-Profiles.html
+    https://gregpennings.github.io/PowerShellAdminModule/Remove-Profile.html
 #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High', DefaultParameterSetName = 'ByComputerName')]
     param(
@@ -67,4 +67,4 @@ function Remove-Profiles {
     }
 }
 
-Set-Alias -Name Remove-ProfilesFromRemoteComputer -Value Remove-Profiles
+Set-Alias -Name Remove-ProfilesFromRemoteComputer -Value Remove-Profile

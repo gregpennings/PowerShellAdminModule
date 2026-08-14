@@ -36,7 +36,7 @@ function New-IsoFile {
 #>
 
    
-  [CmdletBinding(DefaultParameterSetName='Source')]Param( 
+  [CmdletBinding(DefaultParameterSetName='Source', SupportsShouldProcess)]Param(
     [parameter(Position=1,Mandatory=$true,ValueFromPipeline=$true, ParameterSetName='Source')]$Source,  
     [parameter(Position=2)][string]$Path = "$env:temp\$((Get-Date).ToString('yyyyMMdd-HHmmss.ffff')).iso",  
     [ValidateScript({Test-Path -LiteralPath $_ -PathType Leaf})][string]$BootFile = $null, 
@@ -46,8 +46,10 @@ function New-IsoFile {
     [parameter(ParameterSetName='Clipboard')][switch]$FromClipboard 
   ) 
   
-  Begin {  
-    ($cp = new-object System.CodeDom.Compiler.CompilerParameters).CompilerOptions = '/unsafe' 
+  Begin {
+    if (-not $PSCmdlet.ShouldProcess($Path, "Create ISO file")) { break }
+
+    ($cp = new-object System.CodeDom.Compiler.CompilerParameters).CompilerOptions = '/unsafe'
     if (!('ISOFile' -as [type])) {  
       Add-Type -CompilerParameters $cp -TypeDefinition @'
 public class ISOFile  

@@ -6,10 +6,10 @@ Locale: en-US
 Module Name: Admin
 ms.date: 08-07-2026
 PlatyPS schema version: 2024-05-01
-title: Get-Profiles
+title: Get-Profile
 ---
 
-# Get-Profiles
+# Get-Profile
 
 ## SYNOPSIS
 
@@ -20,7 +20,7 @@ Lists non-loaded, non-special user profiles on a computer.
 ### __AllParameterSets
 
 ```
-Get-Profiles [[-ComputerName] <string>]
+Get-Profile [[-ComputerName] <string>]
 ```
 
 ## ALIASES
@@ -41,11 +41,11 @@ the local computer.
 
 ### EXAMPLE 1
 
-Get-Profiles -ComputerName SERVER01
+Get-Profile -ComputerName SERVER01
 
 ### EXAMPLE 2
 
-Get-Profiles -ComputerName SERVER01 | Where-Object { $_.LastUseTime -lt (Get-Date).AddDays(-90) } | Remove-Profiles
+Get-Profile -ComputerName SERVER01 | Where-Object { $_.LastUseTime -lt (Get-Date).AddDays(-90) } | Remove-Profile
 Filters to profiles unused for 90+ days, then removes just those.
 
 ## PARAMETERS
@@ -83,7 +83,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## OUTPUTS
 
-### CIM Win32_UserProfile instances. Pipe them to Remove-Profiles to remove
+### CIM Win32_UserProfile instances. Pipe them to Remove-Profile to remove
 exactly the profiles selected here.
 
 {{ Fill in the Description }}
@@ -92,4 +92,4 @@ exactly the profiles selected here.
 
 ## RELATED LINKS
 
-- [](https://gregpennings.github.io/PowerShellAdminModule/Get-Profiles.html)
+- [](https://gregpennings.github.io/PowerShellAdminModule/Get-Profile.html)

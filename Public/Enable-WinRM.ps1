@@ -36,7 +36,7 @@ function Enable-WinRM {
     }
 
     if (Test-WSMan -ComputerName $ComputerName -ErrorAction SilentlyContinue) {
-        Write-Host "WinRM is already enabled on $ComputerName."
+        Write-Information "WinRM is already enabled on $ComputerName." -InformationAction Continue
         return
     }
 

@@ -1,4 +1,4 @@
-function Get-Profiles {
+function Get-Profile {
     <#
     .SYNOPSIS
         Lists non-loaded, non-special user profiles on a computer.
@@ -13,18 +13,18 @@ function Get-Profiles {
         The computer to query. Defaults to the local computer.
 
     .EXAMPLE
-        Get-Profiles -ComputerName SERVER01
+        Get-Profile -ComputerName SERVER01
 
     .EXAMPLE
-        Get-Profiles -ComputerName SERVER01 | Where-Object { $_.LastUseTime -lt (Get-Date).AddDays(-90) } | Remove-Profiles
+        Get-Profile -ComputerName SERVER01 | Where-Object { $_.LastUseTime -lt (Get-Date).AddDays(-90) } | Remove-Profile
         Filters to profiles unused for 90+ days, then removes just those.
 
     .OUTPUTS
-        CIM Win32_UserProfile instances. Pipe them to Remove-Profiles to remove
+        CIM Win32_UserProfile instances. Pipe them to Remove-Profile to remove
         exactly the profiles selected here.
-    
+
     .LINK
-    https://gregpennings.github.io/PowerShellAdminModule/Get-Profiles.html
+    https://gregpennings.github.io/PowerShellAdminModule/Get-Profile.html
 #>
     [CmdletBinding()]
     param(
@@ -39,4 +39,4 @@ function Get-Profiles {
     }
 }
 
-Set-Alias -Name Get-ProfilesFromRemoteComputer -Value Get-Profiles
+Set-Alias -Name Get-ProfilesFromRemoteComputer -Value Get-Profile

@@ -4,7 +4,7 @@ function Invoke-SessionLogoff {
         Logs off a single quser session on a remote computer.
 
     .DESCRIPTION
-        Shared logoff dispatch used by both of Clear-LoggedOnSessions'
+        Shared logoff dispatch used by both of Clear-LoggedOnSession's
         parameter sets (-ComputerName loop and pipeline). Handles RDP-named
         sessions (rdp-tcp#NN, via 'logoff' on the host) and numeric session
         IDs (via Invoke-RDUserLogoff).
@@ -19,7 +19,7 @@ function Invoke-SessionLogoff {
     )
 
     # The caller already confirmed via its own ShouldProcess before calling this.
-    # Without suppressing it here, -Confirm on Clear-LoggedOnSessions bleeds via
+    # Without suppressing it here, -Confirm on Clear-LoggedOnSession bleeds via
     # $ConfirmPreference into whatever ShouldProcess-aware cmdlets run underneath --
     # e.g. the RemoteDesktop module builds/tears down an implicit CIM proxy module
     # under %TEMP% on first use, and its own internal Copy-Item/Remove-Item calls

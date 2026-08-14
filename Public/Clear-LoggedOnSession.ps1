@@ -1,4 +1,4 @@
-function Clear-LoggedOnSessions {
+function Clear-LoggedOnSession {
     <#
     .SYNOPSIS
         Logs off user sessions on a remote computer.
@@ -10,7 +10,7 @@ function Clear-LoggedOnSessions {
             it shows them in a grid view (Out-GridView) so you pick which ones
             to log off. Pass -Select:$false to log off every session without
             the picker.
-          - Piped: pipe session objects in (e.g. from Get-LoggedOnSessions,
+          - Piped: pipe session objects in (e.g. from Get-LoggedOnSession,
             optionally filtered first) and only those exact sessions are
             logged off.
 
@@ -31,37 +31,37 @@ function Clear-LoggedOnSessions {
         computer without the picker. Ignored when sessions are piped in.
 
     .PARAMETER InputObject
-        A session object to log off, typically piped in from Get-LoggedOnSessions.
+        A session object to log off, typically piped in from Get-LoggedOnSession.
         Each object's own ComputerName property is used as the logoff target, so
         piped sessions from different computers are each sent to the right host.
 
     .EXAMPLE
-        Clear-LoggedOnSessions -ComputerName RDS01
+        Clear-LoggedOnSession -ComputerName RDS01
         Opens a grid view (Out-GridView) listing every session on RDS01; logs off only
         the ones you pick and click OK.
 
     .EXAMPLE
-        Clear-LoggedOnSessions -ComputerName RDS01 -Select:$false
+        Clear-LoggedOnSession -ComputerName RDS01 -Select:$false
         Logs off ALL sessions on RDS01, no picker.
 
     .EXAMPLE
-        Clear-LoggedOnSessions -ComputerName RDS01 -Select:$false -WhatIf
+        Clear-LoggedOnSession -ComputerName RDS01 -Select:$false -WhatIf
         Shows which sessions would be logged off, without doing it.
 
     .EXAMPLE
-        Get-LoggedOnSessions -ComputerName RDS01 -Select | Clear-LoggedOnSessions
-        Picks sessions from a grid view in Get-LoggedOnSessions, then logs off exactly
-        those -- Clear-LoggedOnSessions logs off whatever it receives on the pipeline
+        Get-LoggedOnSession -ComputerName RDS01 -Select | Clear-LoggedOnSession
+        Picks sessions from a grid view in Get-LoggedOnSession, then logs off exactly
+        those -- Clear-LoggedOnSession logs off whatever it receives on the pipeline
         without showing its own picker. Each piped session carries its own
         ComputerName, so this also works if the piped sessions span more than one
         computer.
 
     .EXAMPLE
-        Get-LoggedOnSessions -ComputerName RDS01 | Where-Object State -eq 'Disc' | Clear-LoggedOnSessions
+        Get-LoggedOnSession -ComputerName RDS01 | Where-Object State -eq 'Disc' | Clear-LoggedOnSession
         Logs off only the disconnected sessions on RDS01.
 
     .LINK
-    https://gregpennings.github.io/PowerShellAdminModule/Clear-LoggedOnSessions.html
+    https://gregpennings.github.io/PowerShellAdminModule/Clear-LoggedOnSession.html
 #>
     [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'ByComputerName')]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidDefaultValueSwitchParameter', '',
@@ -91,7 +91,7 @@ function Clear-LoggedOnSessions {
         $users = quser /server:$ComputerName 2>$null | ConvertFrom-QuserOutput
 
         if (-not $users) {
-            Write-Host "No logged-on sessions found on $ComputerName."
+            Write-Warning "No logged-on sessions found on $ComputerName."
             return
         }
 
@@ -99,7 +99,7 @@ function Clear-LoggedOnSessions {
         if ($Select) {
             $targets = $users | Out-GridView -Title "Select sessions to log off on $ComputerName" -PassThru
             if (-not $targets) {
-                Write-Host "No sessions selected."
+                Write-Warning "No sessions selected."
                 return
             }
         } else {
@@ -114,4 +114,4 @@ function Clear-LoggedOnSessions {
             }
         }
     }
-} #End Clear-LoggedOnSessions
+} #End Clear-LoggedOnSession

@@ -12,7 +12,7 @@
 RootModule = 'Admin.psm1'
 
 # Version number of this module.
-ModuleVersion = '5.0.0'
+ModuleVersion = '6.0.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -69,18 +69,18 @@ PowerShellVersion = '7.0'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'Clear-LoggedOnSessions', 'Connect-HyperVHost',
+FunctionsToExport = 'Clear-LoggedOnSession', 'Connect-HyperVHost',
                'ConvertTo-TransposedObject', 'Disconnect-HyperVHost',
                'Enable-RemoteDesktop', 'Enable-WinRM', 'Enable-WinRMSSL',
                'Find-ADUser', 'Find-VMByIPExact', 'Find-VMByIPLike',
                'Get-AdminConfig', 'Get-ADUserGroupMembership', 'Get-CredExpiration',
                'Get-HyperVHostFromAD', 'Get-HyperVSession',
-               'Get-LoggedOnSessions', 'Get-MyCredential',
-               'Get-Profiles', 'Get-SSLCertificateExpirationDate',
+               'Get-LoggedOnSession', 'Get-MyCredential',
+               'Get-Profile', 'Get-SSLCertificateExpirationDate',
                'Get-SystemInfo', 'Get-SystemUptime', 'Get-VMInfo',
                'Get-Whois', 'New-FileNameWithTimestamp',
                'New-FolderNameWithTimestamp', 'New-IsoFile',
-               'Remove-Profiles', 'Restart-ComputerAndPing',
+               'Remove-Profile', 'Restart-ComputerAndPing',
                'Select-StringFromObject', 'Set-AdminConfig', 'Start-RDP',
                'Stop-ComputerAndPing', 'Test-Credential', 'Update-PowerShell',
                'Update-VMInfoCache'

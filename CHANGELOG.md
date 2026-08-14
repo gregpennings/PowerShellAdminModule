@@ -5,6 +5,24 @@ Fine-grained, line-level history lives in git (`git log`, `git blame`); this
 file records the *why* in human terms, per the dated notes carried over from
 the original module header.
 
+## [6.0.0] - 2026-08-14
+
+Major bump: renamed four exported functions to singular nouns (see Changed).
+
+### Changed
+- **Breaking:** four exported functions renamed to drop plural nouns, per
+  PowerShell's naming convention (a cmdlet noun describes the type of a
+  single object, even when the cmdlet can act on several):
+  - `Clear-LoggedOnSessions` -> `Clear-LoggedOnSession`
+  - `Get-LoggedOnSessions` -> `Get-LoggedOnSession`
+  - `Get-Profiles` -> `Get-Profile` (alias `Get-ProfilesFromRemoteComputer`
+    still works, now pointing at the renamed function)
+  - `Remove-Profiles` -> `Remove-Profile` (alias
+    `Remove-ProfilesFromRemoteComputer` still works, now pointing at the
+    renamed function)
+
+  Update any scripts/profiles calling the old names.
+
 ## [5.0.0] - 2026-08-14
 
 Major bump: renamed a function that shadowed a built-in cmdlet (see Changed).

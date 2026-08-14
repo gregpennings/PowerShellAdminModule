@@ -62,7 +62,7 @@ Module: Admin
 #>
 
 function New-FileNameWithTimestamp {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     param (
         [string]$Subject = "report",
         [string]$Extension = "csv",
@@ -74,11 +74,13 @@ function New-FileNameWithTimestamp {
 
     Write-Verbose "Validating or creating path: $Path"
     if (-not (Test-Path $Path)) {
-        try {
-            New-Item -ItemType Directory -Path $Path -Force | Out-Null
-            Write-Verbose "Created directory: $Path"
-        } catch {
-            throw [System.Exception]::new("Error 1001: Failed to create or access path: $Path")
+        if ($PSCmdlet.ShouldProcess($Path, "Create directory")) {
+            try {
+                New-Item -ItemType Directory -Path $Path -Force | Out-Null
+                Write-Verbose "Created directory: $Path"
+            } catch {
+                throw [System.Exception]::new("Error 1001: Failed to create or access path: $Path")
+            }
         }
     }
 
@@ -105,7 +107,7 @@ function New-FileNameWithTimestamp {
         Write-Verbose "Resolved unique filename: $filename"
     }
 
-    if ($CreateEmptyFile) {
+    if ($CreateEmptyFile -and $PSCmdlet.ShouldProcess($fullPath, "Create empty file")) {
         try {
             Write-Verbose "Creating empty file at: $fullPath"
             New-Item -ItemType File -Path $fullPath -Force | Out-Null

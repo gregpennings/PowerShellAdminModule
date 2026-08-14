@@ -34,6 +34,8 @@ function Get-VMInfoLive {
     # Every platform mapper returns this exact property set so the formatter
     # builds one consistent table. Platform-specific fields are $null when N/A.
     function New-VMInfoObject {
+        [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '',
+            Justification = 'Builds and returns a PSCustomObject only; no state change despite the New- verb.')]
         param([hashtable]$Values)
         $obj = [PSCustomObject]@{
             Platform           = $null

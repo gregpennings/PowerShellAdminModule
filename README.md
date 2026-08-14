@@ -167,11 +167,11 @@ The module exports 33 functions and five aliases (`whois`, `Transpose-Object`, `
 
 **Network & DNS:** `Get-Whois` (alias `whois`), `Get-SSLCertificateExpirationDate`
 **Files & reports:** `ConvertTo-TransposedObject` (alias `Transpose-Object`), `New-IsoFile`
-**Remote system & monitoring:** `Get-SystemUptime`, `Get-SystemInfo`, `Get-Profiles` (alias `Get-ProfilesFromRemoteComputer`), `Remove-Profiles` (alias `Remove-ProfilesFromRemoteComputer`)
+**Remote system & monitoring:** `Get-SystemUptime`, `Get-SystemInfo`, `Get-Profile` (alias `Get-ProfilesFromRemoteComputer`), `Remove-Profile` (alias `Remove-ProfilesFromRemoteComputer`)
 **Credentials:** `Test-Credential`, `Get-MyCredential`
 **Active Directory:** `Find-ADUser`, `Get-ADUserGroupMembership`
 **VMware / Nutanix / Hyper-V:** `Find-VMByIPExact`, `Find-VMByIPLike`, `Get-VMInfo`, `Connect-HyperVHost`, `Disconnect-HyperVHost`, `Get-HyperVSession`, `Get-HyperVHostFromAD`
-**Sessions:** `Clear-LoggedOnSessions`, `Get-LoggedOnSessions`
+**Sessions:** `Clear-LoggedOnSession`, `Get-LoggedOnSession`
 **Remote access & enablement:** `Enable-RemoteDesktop`, `Enable-WinRM`, `Enable-WinRMSSL`, `Start-RDP`
 **Workstation / server ops:** `Restart-ComputerAndPing`, `Stop-ComputerAndPing`, `Update-PowerShell`
 **Configuration:** `Get-AdminConfig`, `Set-AdminConfig`
@@ -231,27 +231,27 @@ Get-SystemUptime -ComputerName Server01
 Get-SystemInfo -ComputerName Server01
 ```
 
-#### `Get-Profiles` (alias `Get-ProfilesFromRemoteComputer`)
+#### `Get-Profile` (alias `Get-ProfilesFromRemoteComputer`)
 - Lists unloaded, non-special local user profiles on a computer. Defaults to the
   local computer; pass `-ComputerName` for a remote one.
 
 ```powershell
-Get-Profiles -ComputerName Workstation01
+Get-Profile -ComputerName Workstation01
 ```
 
-#### `Remove-Profiles` (alias `Remove-ProfilesFromRemoteComputer`)
+#### `Remove-Profile` (alias `Remove-ProfilesFromRemoteComputer`)
 - Removes unloaded local user profiles from a computer.
 - Called standalone with `-ComputerName`, it removes every candidate profile on
-  that computer. Piped from `Get-Profiles` (optionally filtered first), it
+  that computer. Piped from `Get-Profile` (optionally filtered first), it
   removes only the profiles that were piped in.
 
 ```powershell
-Remove-Profiles -ComputerName Workstation01
+Remove-Profile -ComputerName Workstation01
 
 # Or filter first, then remove only the matches:
-Get-Profiles -ComputerName Workstation01 |
+Get-Profile -ComputerName Workstation01 |
     Where-Object { $_.LastUseTime -lt (Get-Date).AddDays(-90) } |
-    Remove-Profiles
+    Remove-Profile
 ```
 
 ### Credentials and Security
@@ -362,16 +362,16 @@ Find-VMByIPLike  -IP "10.1.2"
 
 ### Sessions
 
-#### `Clear-LoggedOnSessions`
+#### `Clear-LoggedOnSession`
 - Logs off selected users from a remote computer using `quser` and `Out-GridView`.
 
-#### `Get-LoggedOnSessions`
+#### `Get-LoggedOnSession`
 - Returns logged-on sessions from a remote workstation (`quser`) as objects.
   Read-only — it does not log anyone off. Pipe to `Out-GridView` for the grid view.
 
 ```powershell
-Get-LoggedOnSessions -ComputerName RDS01
-Get-LoggedOnSessions -ComputerName RDS01 | Out-GridView
+Get-LoggedOnSession -ComputerName RDS01
+Get-LoggedOnSession -ComputerName RDS01 | Out-GridView
 ```
 
 ### Remote Access and Service Enablement

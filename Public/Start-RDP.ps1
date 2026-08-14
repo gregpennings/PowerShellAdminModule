@@ -37,7 +37,9 @@ function Start-RDP {
     .LINK
     https://gregpennings.github.io/PowerShellAdminModule/Start-RDP.html
 #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseUsingScopeModifierInNewRunspaces', '',
+        Justification = 'The Start-Job scriptblock below binds $target/$file via its own param() block and -ArgumentList, not by closing over the outer scope, so Using: does not apply. PSScriptAnalyzer flags the param() declaration itself as a false positive.')]
     param(
         [Parameter(Mandatory)]
         [string]$ComputerName,
@@ -45,6 +47,8 @@ function Start-RDP {
         [Parameter(Mandatory)]
         [System.Management.Automation.PSCredential]$Cred
     )
+
+    if (-not $PSCmdlet.ShouldProcess($ComputerName, "Start RDP session")) { return }
 
     # Extract username and password
     $username = $Cred.UserName

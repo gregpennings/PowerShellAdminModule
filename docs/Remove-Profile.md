@@ -6,10 +6,10 @@ Locale: en-US
 Module Name: Admin
 ms.date: 08-07-2026
 PlatyPS schema version: 2024-05-01
-title: Remove-Profiles
+title: Remove-Profile
 ---
 
-# Remove-Profiles
+# Remove-Profile
 
 ## SYNOPSIS
 
@@ -20,13 +20,13 @@ Removes non-loaded, non-special user profiles from a computer.
 ### ByComputerName (Default)
 
 ```
-Remove-Profiles [-ComputerName <string>] [-WhatIf] [-Confirm]
+Remove-Profile [-ComputerName <string>] [-WhatIf] [-Confirm]
 ```
 
 ### ByPipeline
 
 ```
-Remove-Profiles -InputObject <ciminstance> [-WhatIf] [-Confirm]
+Remove-Profile -InputObject <ciminstance> [-WhatIf] [-Confirm]
 ```
 
 ## ALIASES
@@ -41,7 +41,7 @@ Two ways to use this:
     non-loaded, non-special Win32_UserProfile on that computer itself
     (same behavior as the old Remove-ProfilesFromRemoteComputer).
   - Piped: pipe Win32_UserProfile instances in (e.g.
-from Get-Profiles,
+from Get-Profile,
     optionally filtered first) and only those exact profiles are removed.
 This permanently removes the profile(s), including on-disk data.
 Supports -WhatIf / -Confirm and prompts before each deletion by default.
@@ -50,17 +50,17 @@ Supports -WhatIf / -Confirm and prompts before each deletion by default.
 
 ### EXAMPLE 1
 
-Remove-Profiles -ComputerName SERVER01 -WhatIf
+Remove-Profile -ComputerName SERVER01 -WhatIf
 Shows which profiles would be removed without deleting them.
 
 ### EXAMPLE 2
 
-Remove-Profiles -ComputerName SERVER01 -Confirm:$false
+Remove-Profile -ComputerName SERVER01 -Confirm:$false
 Removes every candidate profile on SERVER01 without prompting.
 
 ### EXAMPLE 3
 
-Get-Profiles -ComputerName SERVER01 | Where-Object { $_.LastUseTime -lt (Get-Date).AddDays(-90) } | Remove-Profiles
+Get-Profile -ComputerName SERVER01 | Where-Object { $_.LastUseTime -lt (Get-Date).AddDays(-90) } | Remove-Profile
 Removes only the profiles unused for 90+ days.
 
 ## PARAMETERS
@@ -114,7 +114,7 @@ HelpMessage: ''
 ### -InputObject
 
 A Win32_UserProfile CIM instance to remove, typically piped in from
-Get-Profiles.
+Get-Profile.
 
 ```yaml
 Type: Microsoft.Management.Infrastructure.CimInstance
@@ -174,4 +174,4 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## RELATED LINKS
 
-- [](https://gregpennings.github.io/PowerShellAdminModule/Remove-Profiles.html)
+- [](https://gregpennings.github.io/PowerShellAdminModule/Remove-Profile.html)

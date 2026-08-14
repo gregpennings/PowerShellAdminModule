@@ -41,11 +41,13 @@ function Update-VMInfoCache {
     .LINK
     https://gregpennings.github.io/PowerShellAdminModule/Update-VMInfoCache.html
 #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     param(
         [ValidateSet('All', 'Both', 'VMware', 'Nutanix', 'HyperV')][string]$Platform = 'All',
         [switch]$NoResolveDns
     )
+
+    if (-not $PSCmdlet.ShouldProcess($script:VMInfoCachePath, "Rebuild VM info cache")) { return }
 
     $vms = @(Get-VMInfoLive -Mode ByName -VM '' -Platform $Platform -NoResolveDns:$NoResolveDns)
 

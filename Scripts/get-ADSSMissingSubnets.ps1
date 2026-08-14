@@ -190,7 +190,7 @@ IF ($CombineAndProcess)
     Sort-Object -Property IPAddress -Unique
     $UniqueIPAddresses | Export-Csv -notype -path "$OutputFile"
     # Remove the quotes
-    (get-content "$OutputFile") |% {$_ -replace '"',""} | out-file "$OutputFile" -Fo -En ascii
+    (get-content "$OutputFile") | ForEach-Object {$_ -replace '"',""} | out-file "$OutputFile" -Fo -En ascii
     Write-Host -ForegroundColor green "$($UniqueIPAddresses.count) unique IP Addresses exported to $OutputFile."
 
   }#IF File to Combine

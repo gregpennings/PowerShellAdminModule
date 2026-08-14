@@ -1,13 +1,13 @@
-function Get-LoggedOnSessions {
+function Get-LoggedOnSession {
     <#
     .SYNOPSIS
         Returns the logged-on sessions of a computer as objects.
 
     .DESCRIPTION
         Runs quser against the target computer and parses the output into objects.
-        Read-only -- it does not log anyone off (use Clear-LoggedOnSessions for that).
+        Read-only -- it does not log anyone off (use Clear-LoggedOnSession for that).
         Pipe to Out-GridView (ogv), Where-Object, Format-Table, etc. as needed, or
-        pipe straight to Clear-LoggedOnSessions to log off just the sessions you've
+        pipe straight to Clear-LoggedOnSession to log off just the sessions you've
         filtered to.
 
     .PARAMETER ComputerName
@@ -16,26 +16,26 @@ function Get-LoggedOnSessions {
     .PARAMETER Select
         Show the sessions in a grid view (Out-GridView) and return only the
         ones you pick, instead of returning every session. Handy for piping
-        straight into Clear-LoggedOnSessions: the picker here replaces the
-        one Clear-LoggedOnSessions would otherwise show.
+        straight into Clear-LoggedOnSession: the picker here replaces the
+        one Clear-LoggedOnSession would otherwise show.
 
     .EXAMPLE
-        Get-LoggedOnSessions -ComputerName RDS01
+        Get-LoggedOnSession -ComputerName RDS01
         Returns every session on RDS01 as objects (no grid view).
 
     .EXAMPLE
-        Get-LoggedOnSessions -ComputerName RDS01 -Select
+        Get-LoggedOnSession -ComputerName RDS01 -Select
         Opens a grid view (Out-GridView) listing every session on RDS01; returns only
         the ones you pick and click OK.
 
     .EXAMPLE
-        Get-LoggedOnSessions -ComputerName RDS01 -Select | Clear-LoggedOnSessions
+        Get-LoggedOnSession -ComputerName RDS01 -Select | Clear-LoggedOnSession
         Pick sessions from the grid view here, then log off exactly those --
-        Clear-LoggedOnSessions logs off whatever it receives on the pipeline without
+        Clear-LoggedOnSession logs off whatever it receives on the pipeline without
         showing its own picker, using each session's own ComputerName as the target.
 
     .EXAMPLE
-        Get-LoggedOnSessions -ComputerName RDS01 | Where-Object State -eq 'Disc' | Clear-LoggedOnSessions
+        Get-LoggedOnSession -ComputerName RDS01 | Where-Object State -eq 'Disc' | Clear-LoggedOnSession
         Logs off only the disconnected sessions on RDS01.
 
     .OUTPUTS
@@ -43,7 +43,7 @@ function Get-LoggedOnSessions {
         IdleTime, LogonTime).
 
     .LINK
-    https://gregpennings.github.io/PowerShellAdminModule/Get-LoggedOnSessions.html
+    https://gregpennings.github.io/PowerShellAdminModule/Get-LoggedOnSession.html
 #>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]

@@ -6,10 +6,10 @@ Locale: en-US
 Module Name: Admin
 ms.date: 08-07-2026
 PlatyPS schema version: 2024-05-01
-title: Clear-LoggedOnSessions
+title: Clear-LoggedOnSession
 ---
 
-# Clear-LoggedOnSessions
+# Clear-LoggedOnSession
 
 ## SYNOPSIS
 
@@ -20,13 +20,13 @@ Logs off user sessions on a remote computer.
 ### ByComputerName (Default)
 
 ```
-Clear-LoggedOnSessions -ComputerName <string> [-Select] [-WhatIf] [-Confirm]
+Clear-LoggedOnSession -ComputerName <string> [-Select] [-WhatIf] [-Confirm]
 ```
 
 ### ByPipeline
 
 ```
-Clear-LoggedOnSessions -InputObject <psobject> [-WhatIf] [-Confirm]
+Clear-LoggedOnSession -InputObject <psobject> [-WhatIf] [-Confirm]
 ```
 
 ## ALIASES
@@ -44,7 +44,7 @@ By default (-Select is on)
     to log off. Pass -Select:$false to log off every session without
     the picker.
   - Piped: pipe session objects in (e.g.
-from Get-LoggedOnSessions,
+from Get-LoggedOnSession,
     optionally filtered first) and only those exact sessions are
     logged off.
 
@@ -59,32 +59,32 @@ logged off before committing -- recommended with -Select:$false.
 
 ### EXAMPLE 1
 
-Clear-LoggedOnSessions -ComputerName RDS01
+Clear-LoggedOnSession -ComputerName RDS01
 Opens a grid view (Out-GridView) listing every session on RDS01; logs off only
 the ones you pick and click OK.
 
 ### EXAMPLE 2
 
-Clear-LoggedOnSessions -ComputerName RDS01 -Select:$false
+Clear-LoggedOnSession -ComputerName RDS01 -Select:$false
 Logs off ALL sessions on RDS01, no picker.
 
 ### EXAMPLE 3
 
-Clear-LoggedOnSessions -ComputerName RDS01 -Select:$false -WhatIf
+Clear-LoggedOnSession -ComputerName RDS01 -Select:$false -WhatIf
 Shows which sessions would be logged off, without doing it.
 
 ### EXAMPLE 4
 
-Get-LoggedOnSessions -ComputerName RDS01 -Select | Clear-LoggedOnSessions
-Picks sessions from a grid view in Get-LoggedOnSessions, then logs off exactly
-those -- Clear-LoggedOnSessions logs off whatever it receives on the pipeline
+Get-LoggedOnSession -ComputerName RDS01 -Select | Clear-LoggedOnSession
+Picks sessions from a grid view in Get-LoggedOnSession, then logs off exactly
+those -- Clear-LoggedOnSession logs off whatever it receives on the pipeline
 without showing its own picker. Each piped session carries its own
 ComputerName, so this also works if the piped sessions span more than one
 computer.
 
 ### EXAMPLE 5
 
-Get-LoggedOnSessions -ComputerName RDS01 | Where-Object State -eq 'Disc' | Clear-LoggedOnSessions
+Get-LoggedOnSession -ComputerName RDS01 | Where-Object State -eq 'Disc' | Clear-LoggedOnSession
 Logs off only the disconnected sessions on RDS01.
 
 ## PARAMETERS
@@ -138,7 +138,7 @@ HelpMessage: ''
 
 ### -InputObject
 
-A session object to log off, typically piped in from Get-LoggedOnSessions.
+A session object to log off, typically piped in from Get-LoggedOnSession.
 Each object's own ComputerName property is used as the logoff target, so
 piped sessions from different computers are each sent to the right host.
 
@@ -224,4 +224,4 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## RELATED LINKS
 
-- [](https://gregpennings.github.io/PowerShellAdminModule/Clear-LoggedOnSessions.html)
+- [](https://gregpennings.github.io/PowerShellAdminModule/Clear-LoggedOnSession.html)

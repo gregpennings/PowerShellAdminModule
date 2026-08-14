@@ -43,7 +43,7 @@ https://gregpennings.github.io/PowerShellAdminModule/New-FolderNameWithTimestamp
 #>
 
 function New-FolderNameWithTimestamp {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess)]
     [OutputType([System.IO.DirectoryInfo])]
     param (
         [string]$Subject = "export",
@@ -54,11 +54,13 @@ function New-FolderNameWithTimestamp {
 
     Write-Verbose "Validating or creating parent path: $Path"
     if (-not (Test-Path $Path)) {
-        try {
-            New-Item -ItemType Directory -Path $Path -Force | Out-Null
-            Write-Verbose "Created parent directory: $Path"
-        } catch {
-            throw [System.Exception]::new("Error 1001: Failed to create or access path: $Path")
+        if ($PSCmdlet.ShouldProcess($Path, "Create parent directory")) {
+            try {
+                New-Item -ItemType Directory -Path $Path -Force | Out-Null
+                Write-Verbose "Created parent directory: $Path"
+            } catch {
+                throw [System.Exception]::new("Error 1001: Failed to create or access path: $Path")
+            }
         }
     }
 
@@ -85,11 +87,13 @@ function New-FolderNameWithTimestamp {
         Write-Verbose "Resolved unique folder name: $folderName"
     }
 
-    try {
-        Write-Verbose "Creating folder at: $fullPath"
-        New-Item -ItemType Directory -Path $fullPath -Force | Out-Null
-    } catch {
-        throw [System.Exception]::new("Error 1001: Failed to create the timestamped folder at: $fullPath")
+    if ($PSCmdlet.ShouldProcess($fullPath, "Create folder")) {
+        try {
+            Write-Verbose "Creating folder at: $fullPath"
+            New-Item -ItemType Directory -Path $fullPath -Force | Out-Null
+        } catch {
+            throw [System.Exception]::new("Error 1001: Failed to create the timestamped folder at: $fullPath")
+        }
     }
 
     return [System.IO.DirectoryInfo]::new($fullPath)

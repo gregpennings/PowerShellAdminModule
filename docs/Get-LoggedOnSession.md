@@ -6,10 +6,10 @@ Locale: en-US
 Module Name: Admin
 ms.date: 08-07-2026
 PlatyPS schema version: 2024-05-01
-title: Get-LoggedOnSessions
+title: Get-LoggedOnSession
 ---
 
-# Get-LoggedOnSessions
+# Get-LoggedOnSession
 
 ## SYNOPSIS
 
@@ -20,7 +20,7 @@ Returns the logged-on sessions of a computer as objects.
 ### __AllParameterSets
 
 ```
-Get-LoggedOnSessions [[-ComputerName] <string>] [-Select]
+Get-LoggedOnSession [[-ComputerName] <string>] [-Select]
 ```
 
 ## ALIASES
@@ -31,35 +31,35 @@ This cmdlet has the following aliases,
 ## DESCRIPTION
 
 Runs quser against the target computer and parses the output into objects.
-Read-only -- it does not log anyone off (use Clear-LoggedOnSessions for that).
+Read-only -- it does not log anyone off (use Clear-LoggedOnSession for that).
 Pipe to Out-GridView (ogv), Where-Object, Format-Table, etc.
 as needed, or
-pipe straight to Clear-LoggedOnSessions to log off just the sessions you've
+pipe straight to Clear-LoggedOnSession to log off just the sessions you've
 filtered to.
 
 ## EXAMPLES
 
 ### EXAMPLE 1
 
-Get-LoggedOnSessions -ComputerName RDS01
+Get-LoggedOnSession -ComputerName RDS01
 Returns every session on RDS01 as objects (no grid view).
 
 ### EXAMPLE 2
 
-Get-LoggedOnSessions -ComputerName RDS01 -Select
+Get-LoggedOnSession -ComputerName RDS01 -Select
 Opens a grid view (Out-GridView) listing every session on RDS01; returns only
 the ones you pick and click OK.
 
 ### EXAMPLE 3
 
-Get-LoggedOnSessions -ComputerName RDS01 -Select | Clear-LoggedOnSessions
+Get-LoggedOnSession -ComputerName RDS01 -Select | Clear-LoggedOnSession
 Pick sessions from the grid view here, then log off exactly those --
-Clear-LoggedOnSessions logs off whatever it receives on the pipeline without
+Clear-LoggedOnSession logs off whatever it receives on the pipeline without
 showing its own picker, using each session's own ComputerName as the target.
 
 ### EXAMPLE 4
 
-Get-LoggedOnSessions -ComputerName RDS01 | Where-Object State -eq 'Disc' | Clear-LoggedOnSessions
+Get-LoggedOnSession -ComputerName RDS01 | Where-Object State -eq 'Disc' | Clear-LoggedOnSession
 Logs off only the disconnected sessions on RDS01.
 
 ## PARAMETERS
@@ -131,4 +131,4 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## RELATED LINKS
 
-- [](https://gregpennings.github.io/PowerShellAdminModule/Get-LoggedOnSessions.html)
+- [](https://gregpennings.github.io/PowerShellAdminModule/Get-LoggedOnSession.html)

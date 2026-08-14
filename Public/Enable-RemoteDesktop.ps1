@@ -44,7 +44,7 @@ function Enable-RemoteDesktop {
     }
 
     if ((Test-NetConnection -ComputerName $ComputerName -CommonTCPPort RDP).TcpTestSucceeded) {
-        Write-Host "RDP is already enabled on $ComputerName."
+        Write-Information "RDP is already enabled on $ComputerName." -InformationAction Continue
         return
     }
 

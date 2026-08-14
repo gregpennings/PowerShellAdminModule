@@ -60,7 +60,8 @@ logged off before committing -- recommended with -Select:$false.
 ### EXAMPLE 1
 
 Clear-LoggedOnSessions -ComputerName RDS01
-Lists the sessions on RDS01 in a grid view; logs off only the ones you pick.
+Opens a grid view (Out-GridView) listing every session on RDS01; logs off only
+the ones you pick and click OK.
 
 ### EXAMPLE 2
 
@@ -73,6 +74,15 @@ Clear-LoggedOnSessions -ComputerName RDS01 -Select:$false -WhatIf
 Shows which sessions would be logged off, without doing it.
 
 ### EXAMPLE 4
+
+Get-LoggedOnSessions -ComputerName RDS01 -Select | Clear-LoggedOnSessions
+Picks sessions from a grid view in Get-LoggedOnSessions, then logs off exactly
+those -- Clear-LoggedOnSessions logs off whatever it receives on the pipeline
+without showing its own picker. Each piped session carries its own
+ComputerName, so this also works if the piped sessions span more than one
+computer.
+
+### EXAMPLE 5
 
 Get-LoggedOnSessions -ComputerName RDS01 | Where-Object State -eq 'Disc' | Clear-LoggedOnSessions
 Logs off only the disconnected sessions on RDS01.
@@ -129,6 +139,8 @@ HelpMessage: ''
 ### -InputObject
 
 A session object to log off, typically piped in from Get-LoggedOnSessions.
+Each object's own ComputerName property is used as the logoff target, so
+piped sessions from different computers are each sent to the right host.
 
 ```yaml
 Type: System.Management.Automation.PSObject

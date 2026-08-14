@@ -5,6 +5,15 @@ Fine-grained, line-level history lives in git (`git log`, `git blame`); this
 file records the *why* in human terms, per the dated notes carried over from
 the original module header.
 
+## [4.2.0] - 2026-08-14
+
+### Added
+- `Get-LoggedOnSessions -Select` opens a grid view and returns only the
+  sessions you pick. Piping that into `Clear-LoggedOnSessions` logs off
+  exactly those sessions without triggering its own picker (the pipeline
+  parameter set never showed one), giving a "pick once, log off" workflow:
+  `Get-LoggedOnSessions -ComputerName RDS01 -Select | Clear-LoggedOnSessions`.
+
 ## [4.1.1] - 2026-08-14
 
 ### Fixed

@@ -20,7 +20,7 @@ Returns the logged-on sessions of a computer as objects.
 ### __AllParameterSets
 
 ```
-Get-LoggedOnSessions [[-ComputerName] <string>]
+Get-LoggedOnSessions [[-ComputerName] <string>] [-Select]
 ```
 
 ## ALIASES
@@ -42,12 +42,22 @@ filtered to.
 ### EXAMPLE 1
 
 Get-LoggedOnSessions -ComputerName RDS01
+Returns every session on RDS01 as objects (no grid view).
 
 ### EXAMPLE 2
 
-Get-LoggedOnSessions -ComputerName RDS01 | Out-GridView
+Get-LoggedOnSessions -ComputerName RDS01 -Select
+Opens a grid view (Out-GridView) listing every session on RDS01; returns only
+the ones you pick and click OK.
 
 ### EXAMPLE 3
+
+Get-LoggedOnSessions -ComputerName RDS01 -Select | Clear-LoggedOnSessions
+Pick sessions from the grid view here, then log off exactly those --
+Clear-LoggedOnSessions logs off whatever it receives on the pipeline without
+showing its own picker, using each session's own ComputerName as the target.
+
+### EXAMPLE 4
 
 Get-LoggedOnSessions -ComputerName RDS01 | Where-Object State -eq 'Disc' | Clear-LoggedOnSessions
 Logs off only the disconnected sessions on RDS01.
@@ -67,6 +77,28 @@ Aliases: []
 ParameterSets:
 - Name: (All)
   Position: 0
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Select
+
+Show the sessions in a grid view (Out-GridView) and return only the
+ones you pick, instead of returning every session.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: 'False'
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false

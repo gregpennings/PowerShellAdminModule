@@ -101,7 +101,7 @@ Gets the expiration date of a host's SSL/TLS certificate.
 Gets a broad set of hardware, OS, network, memory, and open-port details for
 a computer (local or remote).
 
-### [Get-Uptime](Get-Uptime.html)
+### [Get-SystemUptime](Get-SystemUptime.html)
 
 {{ Fill in the Synopsis }}
 

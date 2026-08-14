@@ -12,7 +12,7 @@
 RootModule = 'Admin.psm1'
 
 # Version number of this module.
-ModuleVersion = '4.2.0'
+ModuleVersion = '5.0.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -77,7 +77,7 @@ FunctionsToExport = 'Clear-LoggedOnSessions', 'Connect-HyperVHost',
                'Get-HyperVHostFromAD', 'Get-HyperVSession',
                'Get-LoggedOnSessions', 'Get-MyCredential',
                'Get-Profiles', 'Get-SSLCertificateExpirationDate',
-               'Get-SystemInfo', 'Get-Uptime', 'Get-VMInfo',
+               'Get-SystemInfo', 'Get-SystemUptime', 'Get-VMInfo',
                'Get-Whois', 'New-FileNameWithTimestamp',
                'New-FolderNameWithTimestamp', 'New-IsoFile',
                'Remove-Profiles', 'Restart-ComputerAndPing',

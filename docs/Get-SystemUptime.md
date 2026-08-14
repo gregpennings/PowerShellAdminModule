@@ -6,10 +6,10 @@ Locale: en-US
 Module Name: Admin
 ms.date: 08-07-2026
 PlatyPS schema version: 2024-05-01
-title: Get-Uptime
+title: Get-SystemUptime
 ---
 
-# Get-Uptime
+# Get-SystemUptime
 
 ## SYNOPSIS
 
@@ -20,7 +20,7 @@ title: Get-Uptime
 ### __AllParameterSets
 
 ```
-Get-Uptime [[-ComputerName] <string[]>]
+Get-SystemUptime [[-ComputerName] <string[]>]
 ```
 
 ## ALIASES

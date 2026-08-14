@@ -167,7 +167,7 @@ The module exports 33 functions and five aliases (`whois`, `Transpose-Object`, `
 
 **Network & DNS:** `Get-Whois` (alias `whois`), `Get-SSLCertificateExpirationDate`
 **Files & reports:** `ConvertTo-TransposedObject` (alias `Transpose-Object`), `New-IsoFile`
-**Remote system & monitoring:** `Get-Uptime`, `Get-SystemInfo`, `Get-Profiles` (alias `Get-ProfilesFromRemoteComputer`), `Remove-Profiles` (alias `Remove-ProfilesFromRemoteComputer`)
+**Remote system & monitoring:** `Get-SystemUptime`, `Get-SystemInfo`, `Get-Profiles` (alias `Get-ProfilesFromRemoteComputer`), `Remove-Profiles` (alias `Remove-ProfilesFromRemoteComputer`)
 **Credentials:** `Test-Credential`, `Get-MyCredential`
 **Active Directory:** `Find-ADUser`, `Get-ADUserGroupMembership`
 **VMware / Nutanix / Hyper-V:** `Find-VMByIPExact`, `Find-VMByIPLike`, `Get-VMInfo`, `Connect-HyperVHost`, `Disconnect-HyperVHost`, `Get-HyperVSession`, `Get-HyperVHostFromAD`
@@ -216,11 +216,11 @@ New-IsoFile "C:\tools","C:\Downloads\utils" -Path "C:\temp\MyImage.iso"
 
 ### Remote System and Monitoring
 
-#### `Get-Uptime`
+#### `Get-SystemUptime`
 - Retrieves operating system boot and version details from a remote computer.
 
 ```powershell
-Get-Uptime -ComputerName Server01
+Get-SystemUptime -ComputerName Server01
 ```
 
 #### `Get-SystemInfo`

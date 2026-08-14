@@ -1,4 +1,4 @@
-function Get-Uptime {
+function Get-SystemUptime {
     <#
     .SYNOPSIS
         Gets OS and last-boot information for one or more computers.
@@ -12,16 +12,16 @@ function Get-Uptime {
         pipeline input.
 
     .EXAMPLE
-        Get-Uptime -ComputerName SERVER01
+        Get-SystemUptime -ComputerName SERVER01
 
     .EXAMPLE
-        'SERVER01','SERVER02' | Get-Uptime
+        'SERVER01','SERVER02' | Get-SystemUptime
 
     .OUTPUTS
         PSCustomObject (CSName, Caption, ServicePackMajorVersion, OSArchitecture, LastBootUpTime).
-    
+
     .LINK
-    https://gregpennings.github.io/PowerShellAdminModule/Get-Uptime.html
+    https://gregpennings.github.io/PowerShellAdminModule/Get-SystemUptime.html
 #>
     [CmdletBinding()]
     param(

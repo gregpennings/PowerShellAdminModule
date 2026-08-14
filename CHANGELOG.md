@@ -5,6 +5,32 @@ Fine-grained, line-level history lives in git (`git log`, `git blame`); this
 file records the *why* in human terms, per the dated notes carried over from
 the original module header.
 
+## [5.0.0] - 2026-08-14
+
+Major bump: renamed a function that shadowed a built-in cmdlet (see Changed).
+
+### Added
+- `Get-VMInfo` now reads from an on-disk cache by default instead of
+  querying every vCenter/Prism Central/Hyper-V host live on every call.
+  New `Update-VMInfoCache` cmdlet runs the (slow) live query once -- tags,
+  snapshots, datastores, disks per VM, plus reverse-DNS resolution -- and
+  writes the result to `%LOCALAPPDATA%\Admin\VMInfoCache.xml`; `Get-VMInfo`
+  then just filters that cached collection in-memory, with no network calls.
+  Pass `Get-VMInfo -Live` to bypass the cache (e.g. to check whether a
+  server is actually up right now); cached reads warn if the cache is
+  missing or older than `VMInfoCacheMaxAgeMinutes` (new `Admin.Config.psd1`
+  key, default 240). Intended to be warmed from a profile:
+  `Connect-HyperVHost -FromAD; Update-VMInfoCache`.
+
+### Changed
+- **Breaking:** `Get-Uptime` renamed to `Get-SystemUptime`. PowerShell 7.2+
+  ships its own built-in `Get-Uptime` (local machine only, returns a
+  `TimeSpan`); this module's version predates that and does something
+  different -- `-ComputerName`, pipeline input, and CIM-based OS/boot details
+  for local or remote machines -- so it was silently shadowing the built-in
+  instead of complementing it. Update any scripts/profiles calling
+  `Get-Uptime` from this module to `Get-SystemUptime`.
+
 ## [4.2.0] - 2026-08-14
 
 ### Added

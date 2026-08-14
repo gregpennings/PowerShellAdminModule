@@ -5,6 +5,24 @@ Fine-grained, line-level history lives in git (`git log`, `git blame`); this
 file records the *why* in human terms, per the dated notes carried over from
 the original module header.
 
+## [4.1.1] - 2026-08-14
+
+### Fixed
+- `Connect-HyperVHost` now loads the in-box `Hyper-V` module through the
+  Windows PowerShell compatibility shim (`Import-Module Hyper-V
+  -UseWindowsPowerShell`) if it isn't already loaded. That module is Desktop
+  (Windows PowerShell) only, so on PowerShell 7 `Get-VMInfo`'s module-qualified
+  `Hyper-V\Get-VM` calls previously failed to auto-load it, producing "The
+  module 'Hyper-V' could not be loaded" warnings for every connected host
+  even though the hosts and CIM sessions were fine.
+
+### Added
+- README gained a "New Workstation / New Account Checklist" walking through
+  every per-account setup step (PowerShell 7, git/winget, cloning into the
+  per-user module path, deploying the private profile repo, dependency
+  modules, and re-doing DPAPI-locked config/credentials) needed to get the
+  module running on a fresh machine or a second tiered admin account.
+
 ## [4.1.0] - 2026-08-14
 
 ### Changed

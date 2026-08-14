@@ -52,6 +52,8 @@
     Install (or revert to) exactly 7.4.6, silently.
 #>
 [CmdletBinding(SupportsShouldProcess)]
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', 'IncludePreview',
+    Justification = 'Used inside Get-PS7Release via script-scope closure; the analyzer cannot see that usage.')]
 param(
     [string]$Version,
     [switch]$ListVersions,

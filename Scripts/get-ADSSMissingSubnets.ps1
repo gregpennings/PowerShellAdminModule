@@ -110,7 +110,7 @@ IF ($ReplayLogFiles -eq $False)
       $path = "\\$DCName\admin`$\debug\netlogon.log"
 
       # Testing the $path
-      IF ((Test-Path -Path $path) -and ((Get-Item -Path $path).Length -ne $null))
+      IF ((Test-Path -Path $path) -and ($null -ne (Get-Item -Path $path).Length))
       {
         # Copy the NETLOGON.log locally for the current DC
         Write-Host -ForegroundColor green "- Copying the $path file..."

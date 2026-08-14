@@ -167,7 +167,7 @@ The module exports 33 functions and five aliases (`whois`, `Transpose-Object`, `
 
 **Network & DNS:** `Get-Whois` (alias `whois`), `Get-SSLCertificateExpirationDate`
 **Files & reports:** `ConvertTo-TransposedObject` (alias `Transpose-Object`), `New-IsoFile`
-**Remote system & monitoring:** `Get-Uptime`, `Get-SystemInfo`, `Get-Profiles` (alias `Get-ProfilesFromRemoteComputer`), `Remove-Profiles` (alias `Remove-ProfilesFromRemoteComputer`)
+**Remote system & monitoring:** `Get-SystemUptime`, `Get-SystemInfo`, `Get-Profiles` (alias `Get-ProfilesFromRemoteComputer`), `Remove-Profiles` (alias `Remove-ProfilesFromRemoteComputer`)
 **Credentials:** `Test-Credential`, `Get-MyCredential`
 **Active Directory:** `Find-ADUser`, `Get-ADUserGroupMembership`
 **VMware / Nutanix / Hyper-V:** `Find-VMByIPExact`, `Find-VMByIPLike`, `Get-VMInfo`, `Connect-HyperVHost`, `Disconnect-HyperVHost`, `Get-HyperVSession`, `Get-HyperVHostFromAD`
@@ -216,11 +216,11 @@ New-IsoFile "C:\tools","C:\Downloads\utils" -Path "C:\temp\MyImage.iso"
 
 ### Remote System and Monitoring
 
-#### `Get-Uptime`
+#### `Get-SystemUptime`
 - Retrieves operating system boot and version details from a remote computer.
 
 ```powershell
-Get-Uptime -ComputerName Server01
+Get-SystemUptime -ComputerName Server01
 ```
 
 #### `Get-SystemInfo`
@@ -321,17 +321,35 @@ Set-AdminConfig -Name HyperVHosts -Value @('hv01','hv02')
 Connect-HyperVHost                           # mounts the configured hosts
 ```
 
-#### `Get-VMInfo`
-- Lists VM info from connected vCenter(s), Prism Central(s), and mounted Hyper-V
-  host(s), normalized into a single object shape. Select by name (default), exact IP
-  (`-IPExact`), or partial IP (`-IPLike`). Limit with `-Platform`
-  (`All` (default) | `VMware` | `Nutanix` | `HyperV`; `Both` = `All`, back-compat).
+#### `Get-VMInfo` / `Update-VMInfoCache`
+- `Get-VMInfo` lists VM info from connected vCenter(s), Prism Central(s), and
+  mounted Hyper-V host(s), normalized into a single object shape. Select by name
+  (default), exact IP (`-IPExact`), or partial IP (`-IPLike`). Limit with
+  `-Platform` (`All` (default) | `VMware` | `Nutanix` | `HyperV`; `Both` = `All`,
+  back-compat).
+- Live queries are expensive -- several per-VM round trips per platform (tags,
+  snapshots, datastores, disks, network adapters) -- so by default `Get-VMInfo`
+  reads from an on-disk cache instead (`%LOCALAPPDATA%\Admin\VMInfoCache.xml`)
+  and filters it in-memory: no network calls, DNS names included. Pass `-Live`
+  to bypass the cache and query everything directly (e.g. to confirm a server
+  is actually up right now). A cached read warns if the cache is missing or
+  older than `VMInfoCacheMaxAgeMinutes` (`Admin.Config.psd1`, default 240 min).
+- `Update-VMInfoCache` rebuilds that cache -- run it after connecting (or from
+  your profile, right after `Connect-VIServer` / `Connect-PrismCentral` /
+  `Connect-HyperVHost`) so `Get-VMInfo` stays fast for the rest of the session.
 
 ```powershell
+# Warm the cache once connections are up (e.g. end of your profile):
+Update-VMInfoCache
+
+# Fast, cached reads for the rest of the session:
 Get-VMInfo web-01
 Get-VMInfo -IPExact 10.1.2.3
 Get-VMInfo -IPLike 10.1.2 -Platform Nutanix
 Get-VMInfo SERVER01 -Platform HyperV
+
+# Bypass the cache when you need current state:
+Get-VMInfo web-01 -Live
 ```
 
 #### `Find-VMByIPExact` / `Find-VMByIPLike`

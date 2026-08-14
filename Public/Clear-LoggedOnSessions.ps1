@@ -64,7 +64,7 @@ function Clear-LoggedOnSessions {
     https://gregpennings.github.io/PowerShellAdminModule/Clear-LoggedOnSessions.html
 #>
     [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'ByComputerName')]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidDefaultValueSwitchParameter', 'Select',
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidDefaultValueSwitchParameter', '',
         Justification = 'Defaulting to the safer grid-view picker is intentional; pass -Select:$false to clear all sessions.')]
     param(
         [Parameter(ParameterSetName = 'ByComputerName', Mandatory = $true)]

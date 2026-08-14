@@ -101,7 +101,7 @@ Gets the expiration date of a host's SSL/TLS certificate.
 Gets a broad set of hardware, OS, network, memory, and open-port details for
 a computer (local or remote).
 
-### [Get-Uptime](Get-Uptime.html)
+### [Get-SystemUptime](Get-SystemUptime.html)
 
 {{ Fill in the Synopsis }}
 
@@ -154,4 +154,8 @@ Validates a PSCredential against the domain, local machine, or an AD LDS instanc
 
 Updates PowerShell 7 to the latest release using the recommended installer,
 with a version check, an elevation check, and -WhatIf support.
+
+### [Update-VMInfoCache](Update-VMInfoCache.html)
+
+Rebuilds the on-disk cache that Get-VMInfo reads from by default.
 

@@ -80,7 +80,7 @@ function Get-SystemInfo {
         if ($adapters = Get-CimInstance -ComputerName $computer -ClassName Win32_NetworkAdapterConfiguration -ErrorAction SilentlyContinue) {
             $addressMap = @{}
             $adapters | Where-Object { $_.IPAddress -match '\S+' } | ForEach-Object {
-                $addressMap.$($_.IPAddress -join ', ') = $_.MACAddress
+                $addressMap[$_.IPAddress -join ', '] = $_.MACAddress
             }
             $counter = 0
             $addressMap.GetEnumerator() | ForEach-Object {

@@ -186,11 +186,12 @@ Function Update-PowerShell {
         }
         'MSI' {
             # Official bootstrap installer (https://aka.ms/install-powershell.ps1).
-            $installArgs = '-UseMSI'
-            if ($Preview) { $installArgs += ' -Preview' }
-            if ($Quiet)   { $installArgs += ' -Quiet' }
+            $installArgs = @('-UseMSI')
+            if ($Preview) { $installArgs += '-Preview' }
+            if ($Quiet)   { $installArgs += '-Quiet' }
             $script = Invoke-RestMethod -Uri 'https://aka.ms/install-powershell.ps1' -ErrorAction Stop
-            Invoke-Expression "& { $script } $installArgs"
+            $installScript = [scriptblock]::Create($script)
+            & $installScript @installArgs
         }
     }
 

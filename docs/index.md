@@ -155,3 +155,7 @@ Validates a PSCredential against the domain, local machine, or an AD LDS instanc
 Updates PowerShell 7 to the latest release using the recommended installer,
 with a version check, an elevation check, and -WhatIf support.
 
+### [Update-VMInfoCache](Update-VMInfoCache.html)
+
+Rebuilds the on-disk cache that Get-VMInfo reads from by default.
+

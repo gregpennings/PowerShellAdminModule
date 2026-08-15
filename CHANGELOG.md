@@ -5,6 +5,21 @@ Fine-grained, line-level history lives in git (`git log`, `git blame`); this
 file records the *why* in human terms, per the dated notes carried over from
 the original module header.
 
+## [7.0.0] - 2026-08-15
+
+Major bump: removed the exported `Update-PowerShell` function (see Removed).
+
+### Removed
+
+- **Breaking:** `Update-PowerShell` removed. Its default (no-args) path used
+  winget or the official `aka.ms/install-powershell.ps1 -UseMSI` bootstrap
+  without forcing a silent install, so an unattended run would open an
+  interactive MSI setup wizard and hang indefinitely with no error -- easy to
+  miss since nothing on screen indicated it was waiting on input. Its
+  `-Version`/`-ListVersions` paths already just delegated to
+  `Install-PowerShell7.ps1`, which remains the one, standalone way to
+  install/upgrade/revert PowerShell 7; use `-Quiet` there for unattended runs.
+
 ## [6.0.0] - 2026-08-14
 
 Major bump: renamed four exported functions to singular nouns (see Changed).

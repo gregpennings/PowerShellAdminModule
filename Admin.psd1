@@ -12,7 +12,7 @@
 RootModule = 'Admin.psm1'
 
 # Version number of this module.
-ModuleVersion = '6.0.0'
+ModuleVersion = '7.0.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -82,7 +82,7 @@ FunctionsToExport = 'Clear-LoggedOnSession', 'Connect-HyperVHost',
                'New-FolderNameWithTimestamp', 'New-IsoFile',
                'Remove-Profile', 'Restart-ComputerAndPing',
                'Select-StringFromObject', 'Set-AdminConfig', 'Start-RDP',
-               'Stop-ComputerAndPing', 'Test-Credential', 'Update-PowerShell',
+               'Stop-ComputerAndPing', 'Test-Credential',
                'Update-VMInfoCache'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.

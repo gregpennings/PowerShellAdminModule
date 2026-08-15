@@ -163,7 +163,7 @@ result with `Get-AdminConfig`; manage the override files with `Set-AdminConfig`.
 
 ## Exported Commands
 
-The module exports 33 functions and five aliases (`whois`, `Transpose-Object`, `grep`, `Get-ProfilesFromRemoteComputer`, `Remove-ProfilesFromRemoteComputer`).
+The module exports 32 functions and five aliases (`whois`, `Transpose-Object`, `grep`, `Get-ProfilesFromRemoteComputer`, `Remove-ProfilesFromRemoteComputer`).
 
 **Network & DNS:** `Get-Whois` (alias `whois`), `Get-SSLCertificateExpirationDate`
 **Files & reports:** `ConvertTo-TransposedObject` (alias `Transpose-Object`), `New-IsoFile`
@@ -173,7 +173,7 @@ The module exports 33 functions and five aliases (`whois`, `Transpose-Object`, `
 **VMware / Nutanix / Hyper-V:** `Find-VMByIPExact`, `Find-VMByIPLike`, `Get-VMInfo`, `Connect-HyperVHost`, `Disconnect-HyperVHost`, `Get-HyperVSession`, `Get-HyperVHostFromAD`
 **Sessions:** `Clear-LoggedOnSession`, `Get-LoggedOnSession`
 **Remote access & enablement:** `Enable-RemoteDesktop`, `Enable-WinRM`, `Enable-WinRMSSL`, `Start-RDP`
-**Workstation / server ops:** `Restart-ComputerAndPing`, `Stop-ComputerAndPing`, `Update-PowerShell`
+**Workstation / server ops:** `Restart-ComputerAndPing`, `Stop-ComputerAndPing`
 **Configuration:** `Get-AdminConfig`, `Set-AdminConfig`
 
 ## Command Reference
@@ -422,26 +422,21 @@ Restart-ComputerAndPing -ComputerName Workstation01
 Stop-ComputerAndPing -ComputerName Workstation01
 ```
 
-#### `Update-PowerShell`
-- Updates PowerShell 7 to the latest release. Checks the latest version and skips
-  if already current; prefers `winget`, falls back to the official
-  `aka.ms/install-powershell.ps1 -UseMSI` bootstrap (`-UseMSI` forces it). The MSI
-  path needs an elevated session. Supports `-WhatIf`, `-Preview`, `-Quiet`.
-- `-Version x.y.z` installs (or reverts to) an exact version, and `-ListVersions`
-  lists recent releases; both delegate to `Install-PowerShell7.ps1` (in-place MSI).
-- You update the pwsh you launch next; the current session keeps its version.
+#### `Install-PowerShell7.ps1`
+
+- Standalone script (repo root, not a module function) that installs, upgrades,
+  or reverts PowerShell 7 in place via the official per-version MSI. Written in
+  Windows PowerShell 5.1-compatible syntax so it can bootstrap PowerShell 7 on a
+  machine that only has 5.1, where this module cannot even load. Requires an
+  elevated session; use `-Quiet` to run the MSI headless (without it, `msiexec`
+  opens its interactive setup wizard and waits for input).
 
 ```powershell
-Update-PowerShell            # update to latest stable if newer
-Update-PowerShell -WhatIf    # show what would happen, no install
-Update-PowerShell -ListVersions
-Update-PowerShell -Version 7.4.6   # install or revert to a specific version
-Update-PowerShell -UseMSI -Quiet
+.\Install-PowerShell7.ps1                       # install latest stable, interactive
+.\Install-PowerShell7.ps1 -Quiet                 # install latest stable, no UI
+.\Install-PowerShell7.ps1 -ListVersions          # list recent releases, no install
+.\Install-PowerShell7.ps1 -Version 7.4.6 -Quiet  # install or revert to a specific version
 ```
-
-> `Install-PowerShell7.ps1` (repo root) is a standalone, Windows PowerShell
-> 5.1-compatible installer for the same job. Use it to bootstrap PowerShell 7 on a
-> 5.1-only machine, or run `-ListVersions` / `-Version` directly.
 
 ### Configuration
 

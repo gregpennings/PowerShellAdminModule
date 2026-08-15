@@ -150,11 +150,6 @@ Shuts down a computer and opens a continuous ping to watch it drop.
 
 Validates a PSCredential against the domain, local machine, or an AD LDS instance.
 
-### [Update-PowerShell](Update-PowerShell.html)
-
-Updates PowerShell 7 to the latest release using the recommended installer,
-with a version check, an elevation check, and -WhatIf support.
-
 ### [Update-VMInfoCache](Update-VMInfoCache.html)
 
 Rebuilds the on-disk cache that Get-VMInfo reads from by default.

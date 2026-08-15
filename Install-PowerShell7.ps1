@@ -6,8 +6,8 @@
     the Admin module (which now requires 7.0) cannot even load.
 
 .DESCRIPTION
-    Standalone companion to the Admin module's Update-PowerShell. It does not depend
-    on the module, so run it directly from Windows PowerShell 5.1:
+    Standalone installer/updater for PowerShell 7. It does not depend on the Admin
+    module, so run it directly from Windows PowerShell 5.1:
 
         powershell.exe -ExecutionPolicy Bypass -File .\Install-PowerShell7.ps1
 
@@ -23,6 +23,11 @@
     Installs run via msiexec and therefore require an elevated session. PowerShell 7
     upgrades in place at "%ProgramFiles%\PowerShell\7", so there is a single 7.x at a
     time; reverting replaces the current one.
+
+    Without -Quiet, msiexec opens its interactive setup wizard and waits for someone
+    to click through it -- which just hangs forever in an unattended or non-interactive
+    session (no error, no progress, nothing installed). Pass -Quiet for any run that
+    isn't a human watching the screen.
 
 .PARAMETER Version
     Exact version to install, e.g. 7.4.6. Omit to install the latest stable.

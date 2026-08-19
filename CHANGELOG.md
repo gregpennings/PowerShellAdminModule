@@ -5,6 +5,19 @@ Fine-grained, line-level history lives in git (`git log`, `git blame`); this
 file records the *why* in human terms, per the dated notes carried over from
 the original module header.
 
+## [7.1.0] - 2026-08-19
+
+### Added
+
+- **`Get-CertInfo`**: decodes a local CSR (`-Csr`) or PEM certificate (`-Pem`)
+  -- subject, SANs, key algorithm/size, and (for certs) signature algorithm
+  and validity window. `-Compare` (with both `-Csr` and `-Pem`) checks
+  whether a CSR's public key matches an issued certificate's, to confirm the
+  right CSR got signed. `-TestCertChain -ChainPath <bundle.pem>` validates a
+  certificate against a supplied intermediate/root bundle instead of the OS
+  trust store. Relies on .NET 5/.NET 7 PEM- and CSR-loading APIs, so `-Pem`/
+  `-TestCertChain` require PowerShell 7.1+ and `-Csr` requires 7.3+.
+
 ## [7.0.0] - 2026-08-15
 
 Major bump: removed the exported `Update-PowerShell` function (see Removed).

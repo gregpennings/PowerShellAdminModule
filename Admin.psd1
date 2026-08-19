@@ -12,7 +12,7 @@
 RootModule = 'Admin.psm1'
 
 # Version number of this module.
-ModuleVersion = '7.0.0'
+ModuleVersion = '7.1.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -73,7 +73,8 @@ FunctionsToExport = 'Clear-LoggedOnSession', 'Connect-HyperVHost',
                'ConvertTo-TransposedObject', 'Disconnect-HyperVHost',
                'Enable-RemoteDesktop', 'Enable-WinRM', 'Enable-WinRMSSL',
                'Find-ADUser', 'Find-VMByIPExact', 'Find-VMByIPLike',
-               'Get-AdminConfig', 'Get-ADUserGroupMembership', 'Get-CredExpiration',
+               'Get-AdminConfig', 'Get-ADUserGroupMembership', 'Get-CertInfo',
+               'Get-CredExpiration',
                'Get-HyperVHostFromAD', 'Get-HyperVSession',
                'Get-LoggedOnSession', 'Get-MyCredential',
                'Get-Profile', 'Get-SSLCertificateExpirationDate',

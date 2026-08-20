@@ -5,24 +5,21 @@ Function Get-VMInfo {
         Hyper-V host(s).
 
     .DESCRIPTION
-        Filters the on-disk VM info cache (see Update-VMInfoCache) by name or
-        IP and returns matching VMs, normalized into a single object shape
-        across platforms. Cached reads do no network calls, so they're near-
-        instant -- the tradeoff is PowerState and everything else can be as
-        stale as the cache. Pass -Live to bypass the cache and query every
-        connected vCenter, Prism Central, and Hyper-V host directly (slower;
-        several per-VM round trips per platform). If no cache exists yet, this
-        falls back to a live query automatically, with a warning.
-
-        Assumes connections are already established (see profile: Connect-VIServer
-        / Connect-PrismCentral / Connect-HyperVHost) -- required either way, since
-        Update-VMInfoCache needs them too when it builds the cache.
+        Queries every connected vCenter, Prism Central, and Hyper-V host for VMs
+        that match the selection criteria, normalizes all platforms into a single
+        object shape, and returns one uniform collection. Assumes connections are
+        already established (see profile: Connect-VIServer / Connect-PrismCentral /
+        Connect-HyperVHost).
 
         Hyper-V has no ambient connection, so its hosts must be mounted first with
         Connect-HyperVHost (CIM sessions held by the module). Clustered Hyper-V VMs
         are deduped by VM id, so connecting every cluster node never double-counts.
 
         VMs can be selected by name (default), by exact IP, or by partial IP.
+
+        This is a live query -- several per-VM round trips per platform (tags,
+        snapshots, datastores, disks, network adapters) -- so it reports progress
+        per platform (and during DNS resolution) rather than returning silently.
 
     .PARAMETER VM
         VM name (or substring) to match. Defaults to the local computer name.
@@ -38,19 +35,11 @@ Function Get-VMInfo {
         All. 'Both' is accepted as a back-compat synonym for All (it predates
         Hyper-V support, when there were only two platforms).
 
-    .PARAMETER Live
-        Bypass the cache and query every platform directly. Use this when you
-        actually need current PowerState or you're checking whether a server is
-        online right now -- the cache is best-effort for everything else.
-
     .PARAMETER NoResolveDns
-        Only applies to a live query (-Live, or the automatic fallback when no
-        cache exists yet). Skip reverse-DNS resolution: by default, rows the
-        hypervisor doesn't supply a DnsName for (Nutanix, or VMware without guest
-        tools) have their first IP reverse-resolved to its registered network
-        name; this adds one DNS lookup per such row, so pass -NoResolveDns on
-        large sweeps. Cached reads never do DNS lookups either way -- DnsName is
-        whatever was resolved when the cache was built.
+        Skip reverse-DNS resolution. By default, rows the hypervisor doesn't
+        supply a DnsName for (Nutanix, or VMware without guest tools) have
+        their first IP reverse-resolved to its registered network name; this
+        adds one DNS lookup per such row, so pass -NoResolveDns on large sweeps.
 
     .OUTPUTS
         PSCustomObject with a common set of properties across platforms,
@@ -75,11 +64,6 @@ Function Get-VMInfo {
         Get-VMInfo SERVER01 | Select-Object Name, DnsName, IPAddresses
         Looks up a VM by name and projects just the identity columns.
 
-    .EXAMPLE
-        Get-VMInfo web01 -Live
-        Skips the cache and checks web01 live -- e.g. to confirm it's actually
-        up right now, or to see current PowerState.
-
     .LINK
     https://gregpennings.github.io/PowerShellAdminModule/Get-VMInfo.html
 #>
@@ -97,59 +81,258 @@ Function Get-VMInfo {
         # 'Both' retained as a back-compat synonym for 'All' (pre-Hyper-V default).
         [ValidateSet('All', 'Both', 'VMware', 'Nutanix', 'HyperV')][string]$Platform = 'All',
 
-        [switch]$Live,
-
+        # Reverse-resolve the first IP to its registered network name for rows
+        # without a DnsName (Nutanix, or VMware without guest tools). On by
+        # default; pass -NoResolveDns to skip the lookups on large sweeps.
         [switch]$NoResolveDns
     )
 
+    # --- Common output shape -------------------------------------------------
+    # Every platform mapper returns this exact property set so the formatter
+    # builds one consistent table. Platform-specific fields are $null when N/A.
+    function New-VMInfoObject {
+        [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '',
+            Justification = 'Builds and returns a PSCustomObject only; no state change despite the New- verb.')]
+        param([hashtable]$Values)
+        $obj = [PSCustomObject]@{
+            Platform           = $null
+            Name               = $null
+            DnsName            = $null
+            Notes              = $null
+            OS                 = $null
+            NumCpu             = $null
+            MemoryGB           = $null
+            IPAddresses        = $null
+            Tags               = $null
+            PowerState         = $null
+            VMHost             = $null
+            Cluster            = $null
+            CreateDate         = $null
+            PersistentId       = $null
+            ClusterRule        = $null
+            Source             = $null   # vCenter / Prism Central name
+            OldestSnapshot     = $null
+            Datastore          = $null
+            Folder             = $null
+            UsedSpaceGB        = $null
+            ProvisionedSpaceGB = $null
+            HardwareVersion    = $null
+        }
+        foreach ($k in $Values.Keys) { $obj.$k = $Values[$k] }
+
+        # Default columns shown when the object is displayed without an explicit
+        # Select/Format. All other properties remain available (Select *, Format-List).
+        $defaultDisplay = 'Name', 'DnsName', 'IPAddresses', 'Notes'
+        $propSet = New-Object System.Management.Automation.PSPropertySet(
+            'DefaultDisplayPropertySet', [string[]]$defaultDisplay)
+        $obj | Add-Member -MemberType MemberSet -Name PSStandardMembers `
+            -Value ([System.Management.Automation.PSMemberInfo[]]@($propSet))
+        $obj
+    }
+
+    # --- VMware --------------------------------------------------------------
+    function Get-VMwareVMInfo {
+        # Select VMs per the active parameter set. Name filters at the source
+        # (fast); IP filters must enumerate then test the guest IP list.
+        param([string]$Mode, [string]$VM, [string]$IPExact, [string]$IPLike)
+        $vms = @(switch ($Mode) {
+            'ByName'    { VMware.VimAutomation.Core\Get-VM "*$VM*" }
+            'ByIPExact' { VMware.VimAutomation.Core\Get-VM | Where-Object { $_.Guest.IPAddress -contains $IPExact } }
+            'ByIPLike'  { VMware.VimAutomation.Core\Get-VM | Where-Object { $_.Guest.IPAddress -like "*$IPLike*" } }
+        })
+        for ($i = 0; $i -lt $vms.Count; $i++) {
+            $v = $vms[$i]
+            Write-Progress -Id 1 -Activity 'Get-VMInfo' -Status 'VMware' `
+                -PercentComplete ([int](100 * ($i + 1) / $vms.Count)) `
+                -CurrentOperation "VM $($i + 1) of $($vms.Count): $($v.Name)"
+            New-VMInfoObject @{
+                Platform           = 'VMware'
+                Name               = $v.Name
+                DnsName            = $v.ExtensionData.Guest.Hostname
+                Notes              = $v.Notes
+                OS                 = $v.Guest.OSFullName
+                NumCpu             = $v.NumCpu
+                MemoryGB           = $v.MemoryGB
+                IPAddresses        = $v.Guest.IPAddress -join ', '
+                Tags               = ($v | Get-TagAssignment).Tag
+                PowerState         = $v.PowerState
+                VMHost             = $v.VMHost
+                Cluster            = (VMware.VimAutomation.Core\Get-VMHost $v.VMHost).Parent
+                CreateDate         = $v.CreateDate
+                PersistentId       = $v.PersistentId
+                ClusterRule        = (Get-DrsClusterGroup -VM $v).Name
+                Source             = ($v.Uid.Split('@')[1]).Split('.')[0]
+                OldestSnapshot     = (Get-Snapshot -VM $v | Sort-Object Created | Select-Object -First 1).Created
+                Datastore          = if ($v.DatastoreIdList) { (Get-Datastore -Id $v.DatastoreIdList).Name -join ', ' } else { $null }
+                Folder             = $v.Folder.Name
+                UsedSpaceGB        = [math]::Round($v.UsedSpaceGB, 2)
+                ProvisionedSpaceGB = [math]::Round(($v | Get-HardDisk | Measure-Object -Property CapacityGB -Sum).Sum, 2)
+                HardwareVersion    = $v.HardwareVersion
+            }
+        }
+    }
+
+    # --- Nutanix -------------------------------------------------------------
+    function Get-NutanixVMInfo {
+        param([string]$Mode, [string]$VM, [string]$IPExact, [string]$IPLike)
+        $vms = @(Nutanix.Prism.PS.Cmds\Get-VM | Where-Object {
+            $i = $_   # capture: switch below rebinds $_ to its own input
+            switch ($Mode) {
+                'ByName'    { $i.vmName -match "(?i)$VM" }
+                'ByIPExact' { $i.ipAddresses -contains $IPExact }
+                'ByIPLike'  { ($i.ipAddresses -join ',') -like "*$IPLike*" }
+            }
+        })
+        for ($idx = 0; $idx -lt $vms.Count; $idx++) {
+            $v = $vms[$idx]
+            Write-Progress -Id 1 -Activity 'Get-VMInfo' -Status 'Nutanix' `
+                -PercentComplete ([int](100 * ($idx + 1) / $vms.Count)) `
+                -CurrentOperation "VM $($idx + 1) of $($vms.Count): $($v.vmName)"
+            New-VMInfoObject @{
+                Platform           = 'Nutanix'
+                Name               = $v.vmName
+                Notes              = $v.description
+                OS                 = $v.guestOperatingSystem   # empty on AHV without guest tools
+                NumCpu             = $v.numVCpus
+                MemoryGB           = [math]::Round($v.memoryCapacityInBytes / 1GB, 2)
+                IPAddresses        = $v.ipAddresses -join ', '
+                PowerState         = $v.powerState
+                VMHost             = $v.hostName
+                Cluster            = $v.clusterUuid           # no friendly cluster name exposed
+                PersistentId       = $v.vmId
+                Source             = $v.pcHostName            # Prism Central / Element host
+                ProvisionedSpaceGB = [math]::Round($v.diskCapacityInBytes / 1GB, 2)
+            }
+        }
+    }
+
+    # --- Hyper-V -------------------------------------------------------------
+    # No ambient connection: iterate the CIM sessions mounted by Connect-HyperVHost.
+    # Guest IPs / DNS / OS aren't on the VM object -- IPs come from the network
+    # adapters (also used to satisfy the IP parameter sets); DnsName is left for
+    # the reverse-DNS fallback below. Clustered VMs can surface on more than one
+    # node, so dedupe by VMId.
+    function Get-HyperVVMInfo {
+        param([string]$Mode, [string]$VM, [string]$IPExact, [string]$IPLike)
+
+        if ($script:HyperVSessions.Count -eq 0) {
+            Write-Warning "No Hyper-V hosts connected. Run Connect-HyperVHost (or set HyperVHosts via Set-AdminConfig) first."
+            return
+        }
+
+        # Gather first (fast) so the total VM count is known up front, then
+        # enrich each one (slower per-VM calls) in a second, progress-tracked pass.
+        $seen = [System.Collections.Generic.HashSet[string]]::new()
+        $pending = @()   # (VM, owning session) pairs, deduped by VMId
+
+        foreach ($session in $script:HyperVSessions.Values) {
+            $vms = $null
+            try {
+                $vms = if ($Mode -eq 'ByName') {
+                    Hyper-V\Get-VM -CimSession $session -Name "*$VM*" -ErrorAction SilentlyContinue
+                } else {
+                    Hyper-V\Get-VM -CimSession $session -ErrorAction SilentlyContinue
+                }
+            } catch {
+                Write-Warning "Failed to query Hyper-V host '$($session.ComputerName)': $_"
+                continue
+            }
+
+            foreach ($v in $vms) {
+                # Dedupe clustered VMs owned by whichever node we hit first.
+                if (-not $seen.Add([string]$v.VMId)) { continue }
+                $pending += [PSCustomObject]@{ VM = $v; Session = $session }
+            }
+        }
+
+        for ($i = 0; $i -lt $pending.Count; $i++) {
+            $v       = $pending[$i].VM
+            $session = $pending[$i].Session
+            Write-Progress -Id 1 -Activity 'Get-VMInfo' -Status 'HyperV' `
+                -PercentComplete ([int](100 * ($i + 1) / $pending.Count)) `
+                -CurrentOperation "VM $($i + 1) of $($pending.Count): $($v.Name)"
+
+            # Guest IPs from the VM's network adapters (best-effort).
+            $ips = @()
+            try {
+                $ips = @($v | Hyper-V\Get-VMNetworkAdapter -ErrorAction Stop |
+                    ForEach-Object { $_.IPAddresses } | Where-Object { $_ })
+            } catch { $ips = @() }
+
+            # Apply IP parameter-set filters. (Use a value, not 'continue'
+            # inside switch -- 'continue' there breaks the switch, not the loop.)
+            $include = switch ($Mode) {
+                'ByIPExact' { $ips -contains $IPExact }
+                'ByIPLike'  { ($ips -join ',') -like "*$IPLike*" }
+                default     { $true }
+            }
+            if (-not $include) { continue }
+
+            # Oldest checkpoint and disk sizing are best-effort (extra remote calls).
+            $oldestSnap = $null
+            try {
+                $oldestSnap = ($v | Hyper-V\Get-VMSnapshot -ErrorAction Stop |
+                    Sort-Object CreationTime | Select-Object -First 1).CreationTime
+            } catch { $oldestSnap = $null }
+
+            $used = $null; $provisioned = $null
+            try {
+                $vhds = $v | Hyper-V\Get-VMHardDiskDrive -ErrorAction Stop |
+                    ForEach-Object { Hyper-V\Get-VHD -CimSession $session -Path $_.Path -ErrorAction Stop }
+                if ($vhds) {
+                    $used        = [math]::Round((($vhds | Measure-Object -Property FileSize -Sum).Sum) / 1GB, 2)
+                    $provisioned = [math]::Round((($vhds | Measure-Object -Property Size     -Sum).Sum) / 1GB, 2)
+                }
+            } catch { $used = $null; $provisioned = $null }
+
+            New-VMInfoObject @{
+                Platform           = 'HyperV'
+                Name               = $v.Name
+                Notes              = $v.Notes
+                NumCpu             = $v.ProcessorCount
+                MemoryGB           = [math]::Round($v.MemoryStartup / 1GB, 2)
+                IPAddresses        = $ips -join ', '
+                PowerState         = $v.State
+                VMHost             = $v.ComputerName
+                CreateDate         = $v.CreationTime
+                PersistentId       = $v.VMId
+                Source             = $v.ComputerName          # the Hyper-V host
+                OldestSnapshot     = $oldestSnap
+                UsedSpaceGB        = $used
+                ProvisionedSpaceGB = $provisioned
+                HardwareVersion    = $v.Version               # VM config version
+            }
+        }
+    }
+
+    # --- Dispatch --------------------------------------------------------------
+    # Pass the criteria explicitly: $PSCmdlet does not resolve inside nested
+    # functions, so the parameter-set name must be handed in.
     $mode = $PSCmdlet.ParameterSetName
-    $liveArgs = @{
-        Mode        = $mode
-        VM          = $VM
-        IPExact     = $IPExact
-        IPLike      = $IPLike
-        Platform    = $Platform
-        NoResolveDns = $NoResolveDns
+    $all = $Platform -in 'All', 'Both'   # 'Both' kept as a back-compat synonym
+    $results = @()
+    if ($all -or $Platform -eq 'VMware')  { $results += Get-VMwareVMInfo  -Mode $mode -VM $VM -IPExact $IPExact -IPLike $IPLike }
+    if ($all -or $Platform -eq 'Nutanix') { $results += Get-NutanixVMInfo -Mode $mode -VM $VM -IPExact $IPExact -IPLike $IPLike }
+    if ($all -or $Platform -eq 'HyperV')  { $results += Get-HyperVVMInfo  -Mode $mode -VM $VM -IPExact $IPExact -IPLike $IPLike }
+
+    # Fall back to reverse DNS for rows the hypervisor couldn't supply a name
+    # for. -QuickTimeout keeps missing PTR records from stalling bulk queries.
+    if (-not $NoResolveDns) {
+        for ($i = 0; $i -lt $results.Count; $i++) {
+            $r = $results[$i]
+            Write-Progress -Id 1 -Activity 'Get-VMInfo' -Status 'Resolving DNS' `
+                -PercentComplete ([int](100 * ($i + 1) / $results.Count)) `
+                -CurrentOperation "VM $($i + 1) of $($results.Count): $($r.Name)"
+            if (-not [string]::IsNullOrWhiteSpace($r.DnsName)) { continue }
+            $firstIp = ($r.IPAddresses -split ',' | Select-Object -First 1).Trim()
+            if (-not $firstIp) { continue }
+            $ptr = Resolve-DnsName -Name $firstIp -Type PTR -QuickTimeout -ErrorAction SilentlyContinue |
+                Select-Object -First 1 -ExpandProperty NameHost -ErrorAction SilentlyContinue
+            if ($ptr) { $r.DnsName = $ptr }
+        }
     }
 
-    if ($Live) {
-        Get-VMInfoLive @liveArgs
-        return
-    }
+    Write-Progress -Id 1 -Activity 'Get-VMInfo' -Completed
 
-    if (-not (Test-Path -LiteralPath $script:VMInfoCachePath)) {
-        Write-Warning "No VM info cache found at '$script:VMInfoCachePath'. Querying live (slow) -- run Update-VMInfoCache to build a cache (add it to your profile so this stops happening)."
-        Get-VMInfoLive @liveArgs
-        return
-    }
-
-    try {
-        $cache = Import-Clixml -LiteralPath $script:VMInfoCachePath
-    } catch {
-        Write-Warning "Failed to read VM info cache '$script:VMInfoCachePath' ($_); querying live instead."
-        Get-VMInfoLive @liveArgs
-        return
-    }
-
-    $all = $Platform -in 'All', 'Both'
-    if (-not $all -and $cache.Platform -notin 'All', 'Both', $Platform) {
-        Write-Warning "Cache was last built with -Platform $($cache.Platform); it may not include $Platform VMs. Run Update-VMInfoCache -Platform $Platform, or pass -Live."
-    }
-
-    $maxAge = (Get-AdminConfig).VMInfoCacheMaxAgeMinutes
-    $ageMinutes = ((Get-Date) - $cache.Timestamp).TotalMinutes
-    if ($maxAge -and $ageMinutes -gt $maxAge) {
-        Write-Warning ("VM info cache is from {0:g} ({1:N0} min old, older than the configured {2} min). Run Update-VMInfoCache to refresh, or pass -Live." -f $cache.Timestamp, $ageMinutes, $maxAge)
-    }
-
-    $candidates = $cache.VMs
-    if (-not $all) { $candidates = $candidates | Where-Object Platform -eq $Platform }
-
-    $filtered = switch ($mode) {
-        'ByName'    { $candidates | Where-Object Name -like "*$VM*" }
-        'ByIPExact' { $candidates | Where-Object { ($_.IPAddresses -split ',\s*') -contains $IPExact } }
-        'ByIPLike'  { $candidates | Where-Object { $_.IPAddresses -like "*$IPLike*" } }
-    }
-
-    $filtered | Sort-Object Platform, Name
+    $results | Sort-Object Platform, Name
 }

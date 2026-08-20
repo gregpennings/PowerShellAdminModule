@@ -19,11 +19,4 @@
     #   Set-AdminConfig -Name HyperVHosts -Value @('hv01','hv02','clusternodeA')
     # For failover clusters, list every node; clustered VMs are deduped by VM id.
     HyperVHosts       = @()
-
-    # How old (in minutes) the Get-VMInfo cache can get before a cached read
-    # warns you to refresh it. Informational only -- it does not expire or
-    # delete the cache, and does not block the read; pass -Live for a
-    # real-time query, or run Update-VMInfoCache to rebuild it.
-    # Override with: Set-AdminConfig -Name VMInfoCacheMaxAgeMinutes -Value 60
-    VMInfoCacheMaxAgeMinutes = 240
 }

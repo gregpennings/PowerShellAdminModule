@@ -21,19 +21,19 @@ Hyper-V host(s).
 ### ByName (Default)
 
 ```
-Get-VMInfo [[-VM] <string>] [-Platform <string>] [-Live] [-NoResolveDns]
+Get-VMInfo [[-VM] <string>] [-Platform <string>] [-NoResolveDns]
 ```
 
 ### ByIPExact
 
 ```
-Get-VMInfo -IPExact <string> [-Platform <string>] [-Live] [-NoResolveDns]
+Get-VMInfo -IPExact <string> [-Platform <string>] [-NoResolveDns]
 ```
 
 ### ByIPLike
 
 ```
-Get-VMInfo -IPLike <string> [-Platform <string>] [-Live] [-NoResolveDns]
+Get-VMInfo -IPLike <string> [-Platform <string>] [-NoResolveDns]
 ```
 
 ## ALIASES
@@ -43,19 +43,15 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Filters the on-disk VM info cache (see Update-VMInfoCache) by name or IP and
-returns matching VMs, normalized into a single object shape across platforms.
-Cached reads do no network calls, so they're near-instant -- the tradeoff is
-PowerState and everything else can be as stale as the cache.
-Pass -Live to bypass the cache and query every connected vCenter, Prism
-Central, and Hyper-V host directly (slower; several per-VM round trips per
-platform).
-If no cache exists yet, this falls back to a live query automatically,
-with a warning.
+Queries every connected vCenter, Prism Central, and Hyper-V host for VMs
+that match the selection criteria, normalizes all platforms into a single
+object shape, and returns one uniform collection.
+This is a live query -- several per-VM round trips per platform (tags,
+snapshots, datastores, disks, network adapters) -- so it reports progress
+per platform (and during DNS resolution) rather than returning silently.
 
 Assumes connections are already established (see profile: Connect-VIServer /
-Connect-PrismCentral / Connect-HyperVHost) -- required either way, since
-Update-VMInfoCache needs them too when it builds the cache.
+Connect-PrismCentral / Connect-HyperVHost).
 
 Hyper-V has no ambient connection, so its hosts must be mounted first with
 Connect-HyperVHost (CIM sessions held by the module).
@@ -88,13 +84,6 @@ Mount the Hyper-V hosts once, then query them like any other platform.
 
 Get-VMInfo SERVER01 | Select-Object Name, DnsName, IPAddresses
 Looks up a VM by name and projects just the identity columns.
-
-### EXAMPLE 6
-
-Get-VMInfo web01 -Live
-Skips the cache and checks web01 live -- e.g.
-to confirm it's actually
-up right now, or to see current PowerState.
 
 ## PARAMETERS
 
@@ -141,41 +130,13 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Live
-
-Bypass the cache and query every platform directly.
-Use this when you
-actually need current PowerState or you're checking whether a server is
-online right now -- the cache is best-effort for everything else.
-
-```yaml
-Type: System.Management.Automation.SwitchParameter
-DefaultValue: False
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
 ### -NoResolveDns
 
-Only applies to a live query (-Live, or the automatic fallback when no
-cache exists yet).
 Skip reverse-DNS resolution: by default, rows the
 hypervisor doesn't supply a DnsName for (Nutanix, or VMware without guest
 tools) have their first IP reverse-resolved to its registered network
 name; this adds one DNS lookup per such row, so pass -NoResolveDns on
 large sweeps.
-Cached reads never do DNS lookups either way -- DnsName is
-whatever was resolved when the cache was built.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter

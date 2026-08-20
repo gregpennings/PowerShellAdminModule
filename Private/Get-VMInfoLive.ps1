@@ -78,13 +78,16 @@ function Get-VMInfoLive {
         # Select VMs per the active parameter set. Name filters at the source
         # (fast); IP filters must enumerate then test the guest IP list.
         param([string]$Mode, [string]$VM, [string]$IPExact, [string]$IPLike)
-        $vms = switch ($Mode) {
+        $vms = @(switch ($Mode) {
             'ByName'    { VMware.VimAutomation.Core\Get-VM "*$VM*" }
             'ByIPExact' { VMware.VimAutomation.Core\Get-VM | Where-Object { $_.Guest.IPAddress -contains $IPExact } }
             'ByIPLike'  { VMware.VimAutomation.Core\Get-VM | Where-Object { $_.Guest.IPAddress -like "*$IPLike*" } }
-        }
-        $vms | ForEach-Object {
-            $v = $_
+        })
+        for ($i = 0; $i -lt $vms.Count; $i++) {
+            $v = $vms[$i]
+            Write-Progress -Id 1 -Activity 'Get-VMInfoLive' -Status 'VMware' `
+                -PercentComplete ([int](100 * ($i + 1) / $vms.Count)) `
+                -CurrentOperation "VM $($i + 1) of $($vms.Count): $($v.Name)"
             New-VMInfoObject @{
                 Platform           = 'VMware'
                 Name               = $v.Name
@@ -115,16 +118,19 @@ function Get-VMInfoLive {
     # --- Nutanix -------------------------------------------------------------
     function Get-NutanixVMInfo {
         param([string]$Mode, [string]$VM, [string]$IPExact, [string]$IPLike)
-        $vms = Nutanix.Prism.PS.Cmds\Get-VM | Where-Object {
+        $vms = @(Nutanix.Prism.PS.Cmds\Get-VM | Where-Object {
             $i = $_   # capture: switch below rebinds $_ to its own input
             switch ($Mode) {
                 'ByName'    { $i.vmName -match "(?i)$VM" }
                 'ByIPExact' { $i.ipAddresses -contains $IPExact }
                 'ByIPLike'  { ($i.ipAddresses -join ',') -like "*$IPLike*" }
             }
-        }
-        $vms | ForEach-Object {
-            $v = $_
+        })
+        for ($idx = 0; $idx -lt $vms.Count; $idx++) {
+            $v = $vms[$idx]
+            Write-Progress -Id 1 -Activity 'Get-VMInfoLive' -Status 'Nutanix' `
+                -PercentComplete ([int](100 * ($idx + 1) / $vms.Count)) `
+                -CurrentOperation "VM $($idx + 1) of $($vms.Count): $($v.vmName)"
             New-VMInfoObject @{
                 Platform           = 'Nutanix'
                 Name               = $v.vmName
@@ -157,7 +163,10 @@ function Get-VMInfoLive {
             return
         }
 
+        # Gather first (fast) so the total VM count is known up front, then
+        # enrich each one (slower per-VM calls) in a second, progress-tracked pass.
         $seen = [System.Collections.Generic.HashSet[string]]::new()
+        $pending = @()   # (VM, owning session) pairs, deduped by VMId
 
         foreach ($session in $script:HyperVSessions.Values) {
             $vms = $null
@@ -175,57 +184,66 @@ function Get-VMInfoLive {
             foreach ($v in $vms) {
                 # Dedupe clustered VMs owned by whichever node we hit first.
                 if (-not $seen.Add([string]$v.VMId)) { continue }
+                $pending += [PSCustomObject]@{ VM = $v; Session = $session }
+            }
+        }
 
-                # Guest IPs from the VM's network adapters (best-effort).
-                $ips = @()
-                try {
-                    $ips = @($v | Hyper-V\Get-VMNetworkAdapter -ErrorAction Stop |
-                        ForEach-Object { $_.IPAddresses } | Where-Object { $_ })
-                } catch { $ips = @() }
+        for ($i = 0; $i -lt $pending.Count; $i++) {
+            $v       = $pending[$i].VM
+            $session = $pending[$i].Session
+            Write-Progress -Id 1 -Activity 'Get-VMInfoLive' -Status 'HyperV' `
+                -PercentComplete ([int](100 * ($i + 1) / $pending.Count)) `
+                -CurrentOperation "VM $($i + 1) of $($pending.Count): $($v.Name)"
 
-                # Apply IP parameter-set filters. (Use a value, not 'continue'
-                # inside switch -- 'continue' there breaks the switch, not the loop.)
-                $include = switch ($Mode) {
-                    'ByIPExact' { $ips -contains $IPExact }
-                    'ByIPLike'  { ($ips -join ',') -like "*$IPLike*" }
-                    default     { $true }
+            # Guest IPs from the VM's network adapters (best-effort).
+            $ips = @()
+            try {
+                $ips = @($v | Hyper-V\Get-VMNetworkAdapter -ErrorAction Stop |
+                    ForEach-Object { $_.IPAddresses } | Where-Object { $_ })
+            } catch { $ips = @() }
+
+            # Apply IP parameter-set filters. (Use a value, not 'continue'
+            # inside switch -- 'continue' there breaks the switch, not the loop.)
+            $include = switch ($Mode) {
+                'ByIPExact' { $ips -contains $IPExact }
+                'ByIPLike'  { ($ips -join ',') -like "*$IPLike*" }
+                default     { $true }
+            }
+            if (-not $include) { continue }
+
+            # Oldest checkpoint and disk sizing are best-effort (extra remote calls).
+            $oldestSnap = $null
+            try {
+                $oldestSnap = ($v | Hyper-V\Get-VMSnapshot -ErrorAction Stop |
+                    Sort-Object CreationTime | Select-Object -First 1).CreationTime
+            } catch { $oldestSnap = $null }
+
+            $used = $null; $provisioned = $null
+            try {
+                $vhds = $v | Hyper-V\Get-VMHardDiskDrive -ErrorAction Stop |
+                    ForEach-Object { Hyper-V\Get-VHD -CimSession $session -Path $_.Path -ErrorAction Stop }
+                if ($vhds) {
+                    $used        = [math]::Round((($vhds | Measure-Object -Property FileSize -Sum).Sum) / 1GB, 2)
+                    $provisioned = [math]::Round((($vhds | Measure-Object -Property Size     -Sum).Sum) / 1GB, 2)
                 }
-                if (-not $include) { continue }
+            } catch { $used = $null; $provisioned = $null }
 
-                # Oldest checkpoint and disk sizing are best-effort (extra remote calls).
-                $oldestSnap = $null
-                try {
-                    $oldestSnap = ($v | Hyper-V\Get-VMSnapshot -ErrorAction Stop |
-                        Sort-Object CreationTime | Select-Object -First 1).CreationTime
-                } catch { $oldestSnap = $null }
-
-                $used = $null; $provisioned = $null
-                try {
-                    $vhds = $v | Hyper-V\Get-VMHardDiskDrive -ErrorAction Stop |
-                        ForEach-Object { Hyper-V\Get-VHD -CimSession $session -Path $_.Path -ErrorAction Stop }
-                    if ($vhds) {
-                        $used        = [math]::Round((($vhds | Measure-Object -Property FileSize -Sum).Sum) / 1GB, 2)
-                        $provisioned = [math]::Round((($vhds | Measure-Object -Property Size     -Sum).Sum) / 1GB, 2)
-                    }
-                } catch { $used = $null; $provisioned = $null }
-
-                New-VMInfoObject @{
-                    Platform           = 'HyperV'
-                    Name               = $v.Name
-                    Notes              = $v.Notes
-                    NumCpu             = $v.ProcessorCount
-                    MemoryGB           = [math]::Round($v.MemoryStartup / 1GB, 2)
-                    IPAddresses        = $ips -join ', '
-                    PowerState         = $v.State
-                    VMHost             = $v.ComputerName
-                    CreateDate         = $v.CreationTime
-                    PersistentId       = $v.VMId
-                    Source             = $v.ComputerName          # the Hyper-V host
-                    OldestSnapshot     = $oldestSnap
-                    UsedSpaceGB        = $used
-                    ProvisionedSpaceGB = $provisioned
-                    HardwareVersion    = $v.Version               # VM config version
-                }
+            New-VMInfoObject @{
+                Platform           = 'HyperV'
+                Name               = $v.Name
+                Notes              = $v.Notes
+                NumCpu             = $v.ProcessorCount
+                MemoryGB           = [math]::Round($v.MemoryStartup / 1GB, 2)
+                IPAddresses        = $ips -join ', '
+                PowerState         = $v.State
+                VMHost             = $v.ComputerName
+                CreateDate         = $v.CreationTime
+                PersistentId       = $v.VMId
+                Source             = $v.ComputerName          # the Hyper-V host
+                OldestSnapshot     = $oldestSnap
+                UsedSpaceGB        = $used
+                ProvisionedSpaceGB = $provisioned
+                HardwareVersion    = $v.Version               # VM config version
             }
         }
     }
@@ -240,7 +258,11 @@ function Get-VMInfoLive {
     # Fall back to reverse DNS for rows the hypervisor couldn't supply a name
     # for. -QuickTimeout keeps missing PTR records from stalling bulk queries.
     if (-not $NoResolveDns) {
-        foreach ($r in $results) {
+        for ($i = 0; $i -lt $results.Count; $i++) {
+            $r = $results[$i]
+            Write-Progress -Id 1 -Activity 'Get-VMInfoLive' -Status 'Resolving DNS' `
+                -PercentComplete ([int](100 * ($i + 1) / $results.Count)) `
+                -CurrentOperation "VM $($i + 1) of $($results.Count): $($r.Name)"
             if (-not [string]::IsNullOrWhiteSpace($r.DnsName)) { continue }
             $firstIp = ($r.IPAddresses -split ',' | Select-Object -First 1).Trim()
             if (-not $firstIp) { continue }
@@ -249,6 +271,8 @@ function Get-VMInfoLive {
             if ($ptr) { $r.DnsName = $ptr }
         }
     }
+
+    Write-Progress -Id 1 -Activity 'Get-VMInfoLive' -Completed
 
     $results | Sort-Object Platform, Name
 }

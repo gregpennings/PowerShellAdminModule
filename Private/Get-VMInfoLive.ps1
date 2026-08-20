@@ -103,7 +103,7 @@ function Get-VMInfoLive {
                 ClusterRule        = (Get-DrsClusterGroup -VM $v).Name
                 Source             = ($v.Uid.Split('@')[1]).Split('.')[0]
                 OldestSnapshot     = (Get-Snapshot -VM $v | Sort-Object Created | Select-Object -First 1).Created
-                Datastore          = (Get-Datastore -Id $v.DatastoreIdList).Name
+                Datastore          = if ($v.DatastoreIdList) { (Get-Datastore -Id $v.DatastoreIdList).Name -join ', ' } else { $null }
                 Folder             = $v.Folder.Name
                 UsedSpaceGB        = [math]::Round($v.UsedSpaceGB, 2)
                 ProvisionedSpaceGB = [math]::Round(($v | Get-HardDisk | Measure-Object -Property CapacityGB -Sum).Sum, 2)

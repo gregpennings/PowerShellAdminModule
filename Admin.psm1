@@ -33,14 +33,6 @@ $script:AdminConfig = @{}
 # Get-HyperVSession; tear down with Disconnect-HyperVHost.
 $script:HyperVSessions = [ordered]@{}
 
-# ----- VM info cache ---------------------------------------------------------
-# Get-VMInfo's live query is expensive (several per-VM round trips per
-# platform: tags, snapshots, datastores, disks, network adapters). Update-
-# VMInfoCache runs that query once and writes the result here; Get-VMInfo reads
-# this file by default and only falls back to a live query via Get-VMInfoLive
-# when -Live is passed or no cache exists yet.
-$script:VMInfoCachePath = Join-Path $env:LOCALAPPDATA 'Admin\VMInfoCache.xml'
-
 $public  = @(Get-ChildItem -Path (Join-Path $PSScriptRoot 'Public\*.ps1')  -ErrorAction SilentlyContinue)
 $private = @(Get-ChildItem -Path (Join-Path $PSScriptRoot 'Private\*.ps1') -ErrorAction SilentlyContinue)
 

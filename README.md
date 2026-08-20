@@ -321,35 +321,22 @@ Set-AdminConfig -Name HyperVHosts -Value @('hv01','hv02')
 Connect-HyperVHost                           # mounts the configured hosts
 ```
 
-#### `Get-VMInfo` / `Update-VMInfoCache`
-- `Get-VMInfo` lists VM info from connected vCenter(s), Prism Central(s), and
-  mounted Hyper-V host(s), normalized into a single object shape. Select by name
+#### `Get-VMInfo`
+- Lists VM info from connected vCenter(s), Prism Central(s), and mounted
+  Hyper-V host(s), normalized into a single object shape. Select by name
   (default), exact IP (`-IPExact`), or partial IP (`-IPLike`). Limit with
   `-Platform` (`All` (default) | `VMware` | `Nutanix` | `HyperV`; `Both` = `All`,
   back-compat).
-- Live queries are expensive -- several per-VM round trips per platform (tags,
-  snapshots, datastores, disks, network adapters) -- so by default `Get-VMInfo`
-  reads from an on-disk cache instead (`%LOCALAPPDATA%\Admin\VMInfoCache.xml`)
-  and filters it in-memory: no network calls, DNS names included. Pass `-Live`
-  to bypass the cache and query everything directly (e.g. to confirm a server
-  is actually up right now). A cached read warns if the cache is missing or
-  older than `VMInfoCacheMaxAgeMinutes` (`Admin.Config.psd1`, default 240 min).
-- `Update-VMInfoCache` rebuilds that cache -- run it after connecting (or from
-  your profile, right after `Connect-VIServer` / `Connect-PrismCentral` /
-  `Connect-HyperVHost`) so `Get-VMInfo` stays fast for the rest of the session.
+- Always a live query -- several per-VM round trips per platform (tags,
+  snapshots, datastores, disks, network adapters) -- so it reports progress
+  per platform (and during DNS resolution) as it runs. Pass `-NoResolveDns`
+  to skip reverse-DNS lookups on large sweeps.
 
 ```powershell
-# Warm the cache once connections are up (e.g. end of your profile):
-Update-VMInfoCache
-
-# Fast, cached reads for the rest of the session:
 Get-VMInfo web-01
 Get-VMInfo -IPExact 10.1.2.3
 Get-VMInfo -IPLike 10.1.2 -Platform Nutanix
 Get-VMInfo SERVER01 -Platform HyperV
-
-# Bypass the cache when you need current state:
-Get-VMInfo web-01 -Live
 ```
 
 #### `Find-VMByIPExact` / `Find-VMByIPLike`

@@ -5,6 +5,23 @@ Fine-grained, line-level history lives in git (`git log`, `git blame`); this
 file records the *why* in human terms, per the dated notes carried over from
 the original module header.
 
+## [8.0.0] - 2026-08-20
+
+### Removed
+
+- **Breaking:** Removed the on-disk `Get-VMInfo` cache introduced in 6.x.
+  `Update-VMInfoCache` is gone, `Get-VMInfo` no longer has a `-Live` switch
+  (it is always a live query now), and `VMInfoCacheMaxAgeMinutes`
+  (`Admin.Config.psd1`) no longer exists. In practice the cache caused more
+  problems than it solved: a multi-minute rebuild with no visible progress
+  (indistinguishable from a hang), and a Hyper-V lookup bug in the
+  cache-building code path that returned empty results even when the
+  underlying `Hyper-V\Get-VM` query worked fine directly.
+- `Get-VMInfo` keeps the `Write-Progress` "VM X of Y" reporting added while
+  debugging the cache (still useful for any slow multi-VM live query), and
+  the `Get-Datastore`/`DatastoreIdList` null-check fix for VMs with no
+  attached datastore.
+
 ## [7.1.0] - 2026-08-19
 
 ### Added

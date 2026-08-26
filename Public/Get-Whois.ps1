@@ -38,7 +38,25 @@ function Get-Whois {
         $services = (Invoke-RestMethod "https://data.iana.org/rdap/dns.json").services
         $rdapRoot = $services | Where-Object { $PSItem[0] -contains $tld } | Select-Object -First 1
         if (-not $rdapRoot) { throw "No RDAP server found for .$tld" }
-        $r = Invoke-RestMethod "$($rdapRoot[1][0])domain/$Domain"
+
+        try {
+            $r = Invoke-RestMethod "$($rdapRoot[1][0])domain/$Domain"
+        }
+        catch {
+            $status = $PSItem.Exception.Response.StatusCode.value__
+            if ($status -eq 404) {
+                [PSCustomObject]@{
+                    Domain      = $Domain
+                    Status      = 'Not registered or no information found'
+                    Registrar   = $null
+                    NameServers = $null
+                    Events      = $null
+                    DNSSEC      = $null
+                }
+                return
+            }
+            throw
+        }
 
         $registrar = $r.entities | Where-Object { $PSItem.roles -contains 'registrar' } |
             Select-Object -First 1 -ExpandProperty vcardArray |

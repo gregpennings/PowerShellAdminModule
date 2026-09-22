@@ -20,7 +20,7 @@ Lists the AD groups a user is a direct member of.
 ### ByName (Default)
 
 ```
-Get-ADUserGroupMembership [-UserName <string>]
+Get-ADUserGroupMembership [[-UserName] <string>]
 ```
 
 ### GridView
@@ -108,7 +108,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: ByName
-  Position: Named
+  Position: 0
   IsRequired: false
   ValueFromPipeline: true
   ValueFromPipelineByPropertyName: true

@@ -45,7 +45,7 @@ function Get-ADUserGroupMembership {
 #>
     [CmdletBinding(DefaultParameterSetName = 'ByName')]
     param(
-        [Parameter(ParameterSetName = 'ByName', ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [Parameter(ParameterSetName = 'ByName', Position = 0, ValueFromPipeline, ValueFromPipelineByPropertyName)]
         [string]$UserName = $env:USERNAME,
 
         [Parameter(ParameterSetName = 'GridView', Mandatory)]

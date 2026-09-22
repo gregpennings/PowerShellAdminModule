@@ -4,7 +4,7 @@ external help file: Admin-Help.xml
 HelpUri: https://gregpennings.github.io/PowerShellAdminModule/
 Locale: en-US
 Module Name: Admin
-ms.date: 08-07-2026
+ms.date: 09-22-2026
 PlatyPS schema version: 2024-05-01
 title: Get-CredExpiration
 ---
@@ -22,7 +22,7 @@ On-demand credential/certificate expiration checker.
 ```
 Get-CredExpiration [[-WarningWindowDays] <int>] [[-OutDir] <string>] [[-LogFileName] <string>]
  [[-CsvFileName] <string>] [[-LookbackDays] <string>] [-IncludeAll] [-ExportResults]
- [-IncludeSummary]
+ [-IncludeSummary] [-Delegated]
 ```
 
 ## ALIASES
@@ -36,10 +36,20 @@ Connects live to Microsoft Graph (no manual CSV export needed) and checks
 App Registrations + Enterprise Applications (Service Principals) for
 expiring or expired secrets/certificates.
 
-Requires: Application.Read.All (already admin-consented as of today)
+Requires the Application.Read.All Graph permission -- the least-privileged
+one covering both GET /applications and GET /servicePrincipals.
 
-On first run in a session, you'll be prompted to sign in via device code
-(a browser window will open).
+Authentication is app-only when the module's app registration is configured:
+
+    Set-AdminConfig -Name EntraTenantId       -Value '<tenant guid>'
+    Set-AdminConfig -Name EntraClientId       -Value '<app registration guid>'
+    Set-AdminConfig -Name EntraCertThumbprint -Value '<client cert thumbprint>'
+
+Create the app registration and certificate with
+Scripts\2026-09-22-New-AdminModuleAppRegistration.ps1 -Configure.
+
+Without those settings it falls back to an interactive device-code sign-in
+as you, prompting once per session (a browser window will open).
 
 ## EXAMPLES
 
@@ -55,6 +65,10 @@ Get-CredExpiration -IncludeAll -ExportResults -WarningWindowDays 45
 
 Get-CredExpiration -LookbackDays All -IncludeSummary
 
+### EXAMPLE 4
+
+Get-CredExpiration -Delegated
+
 ## PARAMETERS
 
 ### -CsvFileName
@@ -69,6 +83,29 @@ Aliases: []
 ParameterSets:
 - Name: (All)
   Position: 3
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Delegated
+
+Force the interactive device-code sign-in even when the app registration is
+configured -- useful when your own account can see something the app
+registration's permissions do not cover.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: False
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false

@@ -161,6 +161,51 @@ actually run the module.
 Settings are layered (repo defaults → per-machine → per-user). View the merged
 result with `Get-AdminConfig`; manage the override files with `Set-AdminConfig`.
 
+### Entra / Microsoft Graph app registration
+
+The Entra-facing commands (currently `Get-CredExpiration`) authenticate to
+Microsoft Graph **app-only**, using the module's own app registration and a
+client certificate, rather than the shared first-party "Microsoft Graph
+Command Line Tools" app. Create it once per tenant:
+
+```powershell
+# Dry run first -- shows everything that would be created, changes nothing
+.\Scripts\2026-09-22-New-AdminModuleAppRegistration.ps1 -WhatIf
+
+# Then create it and write the settings into your per-user config
+.\Scripts\2026-09-22-New-AdminModuleAppRegistration.ps1 -Configure
+```
+
+That creates a self-signed certificate in `Cert:\CurrentUser\My`, an app
+registration and service principal, and grants the app the
+**`Application.Read.All`** Graph *application* permission — the least-privileged
+one covering both `GET /applications` and `GET /servicePrincipals`. Creating the
+app-role assignment *is* the admin consent, so you must run it as a **Privileged
+Role Administrator** or Global Administrator.
+
+It populates three settings:
+
+| Setting | Meaning |
+| --- | --- |
+| `EntraTenantId` | Directory (tenant) ID |
+| `EntraClientId` | Application (client) ID of the app registration |
+| `EntraCertThumbprint` | Thumbprint of the client certificate |
+
+All three are required for app-only auth; if any is missing the commands fall
+back to an interactive device-code sign-in as you. `-Delegated` forces that
+fallback even when the app registration is configured. The values are
+tenant-specific, so they live in your untracked override rather than the repo's
+public `Admin.Config.psd1`.
+
+Renew the certificate before it expires (the module warns at 30 days):
+
+```powershell
+.\Scripts\2026-09-22-New-AdminModuleAppRegistration.ps1 -RenewCertificate -Configure
+```
+
+That adds a second certificate to the existing app registration so the old one
+keeps working; remove the old key credential once you have verified the new one.
+
 ## Exported Commands
 
 The module exports 32 functions and five aliases (`whois`, `Transpose-Object`, `grep`, `Get-ProfilesFromRemoteComputer`, `Remove-ProfilesFromRemoteComputer`).
@@ -269,6 +314,22 @@ Test-Credential -credential $cred -context Domain
 
 ```powershell
 Get-MyCredential -CredPath "C:\secure\mycredential.xml"
+```
+
+#### `Get-CredExpiration`
+- Reports expired and expiring secrets/certificates across every Entra app
+  registration and enterprise application, live from Microsoft Graph.
+- Authenticates app-only via the module's app registration when configured (see
+  [Configuration](#entra--microsoft-graph-app-registration)); otherwise prompts
+  for an interactive device-code sign-in.
+
+```powershell
+Get-CredExpiration
+Get-CredExpiration -IncludeAll -ExportResults -WarningWindowDays 45
+Get-CredExpiration -LookbackDays All -IncludeSummary
+
+# Force interactive sign-in as yourself instead of the app registration
+Get-CredExpiration -Delegated
 ```
 
 ### Active Directory

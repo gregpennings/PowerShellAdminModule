@@ -5,6 +5,49 @@ Fine-grained, line-level history lives in git (`git log`, `git blame`); this
 file records the *why* in human terms, per the dated notes carried over from
 the original module header.
 
+## [8.1.0] - 2026-09-22
+
+### Added
+
+- **App-registration authentication for Microsoft Graph.** The module's
+  Entra-facing commands now sign in app-only against an app registration that
+  belongs to this module, using a client certificate, instead of riding on the
+  shared first-party "Microsoft Graph Command Line Tools" app and whatever
+  consent it happens to carry. Sign-ins are attributable to the module, the
+  permission set is pinned and least-privileged, and nothing depends on the
+  calling admin's own standing rights.
+- `Scripts\2026-09-22-New-AdminModuleAppRegistration.ps1` provisions it:
+  self-signed certificate, app registration, service principal, and the
+  `Application.Read.All` *application* permission grant. It supports `-WhatIf`
+  (recommended first run), `-Configure` to write the settings straight into the
+  per-user config, and `-RenewCertificate` to roll the certificate without
+  disturbing the app registration or its grants. App roles are resolved from the
+  tenant's own Graph service principal at run time rather than from hardcoded
+  permission GUIDs, so a misspelled permission fails loudly instead of silently
+  granting nothing.
+- Three config settings, blank in the public repo config and set per-user:
+  `EntraTenantId`, `EntraClientId`, `EntraCertThumbprint`.
+- `Get-CredExpiration -Delegated` forces the old interactive sign-in, for the
+  case where your own account can see something the app registration cannot.
+
+### Changed
+
+- `Get-CredExpiration` no longer calls `Connect-MgGraph` itself. Graph sign-in
+  moved to a private `Connect-AdminGraph` helper so every future Entra command
+  shares one auth path. It prefers app-only when all three settings are present
+  and falls back to the previous device-code flow otherwise, so an unconfigured
+  machine behaves exactly as it did before.
+- `Connect-AdminGraph` reuses an existing matching Graph context instead of
+  re-authenticating, so several Entra commands in one session prompt at most
+  once. A delegated context is deliberately *not* reused to satisfy an app-only
+  request, and vice versa.
+- The interactive fallback now requests `Application.Read.All` explicitly rather
+  than relying on whatever scopes the previous consent left on the first-party
+  app, and passes the module's own client ID when it is known.
+- The client certificate is validated before use: missing, private-key-less and
+  already-expired certificates fail with an actionable message, and one expiring
+  within 30 days emits a warning pointing at `-RenewCertificate`.
+
 ## [8.0.0] - 2026-08-20
 
 ### Removed

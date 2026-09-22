@@ -8,10 +8,26 @@ function Get-CredExpiration {
     App Registrations + Enterprise Applications (Service Principals) for
     expiring or expired secrets/certificates.
 
-    Requires: Application.Read.All (already admin-consented as of today)
+    Requires the Application.Read.All Graph permission -- the least-privileged
+    one covering both GET /applications and GET /servicePrincipals.
 
-    On first run in a session, you'll be prompted to sign in via device code
-    (a browser window will open).
+    Authentication (see Connect-AdminGraph) is app-only when the module's app
+    registration is configured:
+
+      Set-AdminConfig -Name EntraTenantId       -Value '<tenant guid>'
+      Set-AdminConfig -Name EntraClientId       -Value '<app registration guid>'
+      Set-AdminConfig -Name EntraCertThumbprint -Value '<client cert thumbprint>'
+
+    Create the app registration and certificate with
+    Scripts\2026-09-22-New-AdminModuleAppRegistration.ps1 -Configure.
+
+    Without those settings it falls back to an interactive device-code sign-in
+    as you, prompting once per session (a browser window will open).
+
+    .PARAMETER Delegated
+    Force the interactive device-code sign-in even when the app registration is
+    configured -- useful when your own account can see something the app
+    registration's permissions do not cover.
 
     .PARAMETER WarningWindowDays
     Days out to flag a credential as "Expiring Soon" (default 30).
@@ -57,7 +73,8 @@ function Get-CredExpiration {
         [string]$CsvFileName = "expiration_report.csv",
         [ValidateScript({ $_ -eq 'All' -or $_ -match '^\d+$' }, ErrorMessage = "LookbackDays must be 'All' or a whole number of days.")]
         [string]$LookbackDays = "90",
-        [switch]$IncludeSummary
+        [switch]$IncludeSummary,
+        [switch]$Delegated
     )
 
     $LookbackFilterDays = if ($LookbackDays -eq 'All') { $null } else { [int]$LookbackDays }
@@ -85,16 +102,18 @@ function Get-CredExpiration {
         return @{ Days = $days; Status = $status }
     }
 
-    # ---- Connect to Graph (device code avoids the WAM broker hang; disabling WAM
-    #      stops it from corrupting the device-code token on the very next call) ----
+    # ---- Connect to Graph -----------------------------------------------------
+    # Connect-AdminGraph owns the auth decision: app-only with the module's own
+    # app registration certificate when it is configured, interactive device code
+    # otherwise. Application.Read.All is the least-privileged permission that
+    # covers both GET /applications and GET /servicePrincipals below, and exists
+    # as both an application and a delegated permission, so the same scope name
+    # works for either path.
     Write-Information "Connecting to Microsoft Graph..." -InformationAction Continue
     try {
-        Set-MgGraphOption -DisableLoginByWAM $true
-        Connect-MgGraph -NoWelcome -UseDeviceCode -ErrorAction Stop
-        if (-not (Get-MgContext)) {
-            throw "No active Graph context after Connect-MgGraph."
-        }
-        Write-Information "Connected." -InformationAction Continue
+        $ctx = Connect-AdminGraph -Scopes 'Application.Read.All' -Delegated:$Delegated -ErrorAction Stop
+        $how = if ($ctx.AuthType -eq 'AppOnly') { "app-only as $($ctx.AppName)" } else { "as $($ctx.Account)" }
+        Write-Information "Connected ($how)." -InformationAction Continue
     } catch {
         Write-Error "Failed to connect to Graph. Error: $_"
         return

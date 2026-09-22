@@ -19,4 +19,25 @@
     #   Set-AdminConfig -Name HyperVHosts -Value @('hv01','hv02','clusternodeA')
     # For failover clusters, list every node; clustered VMs are deduped by VM id.
     HyperVHosts       = @()
+
+    # ----- Entra / Microsoft Graph app registration --------------------------
+    # Identity the Entra-facing commands (Get-CredExpiration) authenticate with,
+    # app-only, via Connect-AdminGraph. All three must be set for app-only auth;
+    # with any of them missing the commands fall back to interactive device-code
+    # sign-in as the calling user.
+    #
+    # These are tenant-specific, so they stay EMPTY here (this file is public)
+    # and belong in your untracked override. Create the app registration and
+    # certificate, and have all three written for you, with:
+    #   .\Scripts\2026-09-22-New-AdminModuleAppRegistration.ps1 -Configure
+    # or set them by hand:
+    #   Set-AdminConfig -Name EntraTenantId       -Value '<tenant guid>'
+    #   Set-AdminConfig -Name EntraClientId       -Value '<app registration guid>'
+    #   Set-AdminConfig -Name EntraCertThumbprint -Value '<client cert thumbprint>'
+    #
+    # The thumbprint is not a secret; the private key it points at (in
+    # Cert:\CurrentUser\My) is what must be protected.
+    EntraTenantId       = ''
+    EntraClientId       = ''
+    EntraCertThumbprint = ''
 }

@@ -165,7 +165,7 @@ result with `Get-AdminConfig`; manage the override files with `Set-AdminConfig`.
 
 The module exports 32 functions and five aliases (`whois`, `Transpose-Object`, `grep`, `Get-ProfilesFromRemoteComputer`, `Remove-ProfilesFromRemoteComputer`).
 
-**Network & DNS:** `Get-Whois` (alias `whois`), `Get-SSLCertificateExpirationDate`
+**Network & DNS:** `Get-Whois` (alias `whois`), `Get-SSLCertInfo`
 **Files & reports:** `ConvertTo-TransposedObject` (alias `Transpose-Object`), `New-IsoFile`
 **Remote system & monitoring:** `Get-SystemUptime`, `Get-SystemInfo`, `Get-Profile` (alias `Get-ProfilesFromRemoteComputer`), `Remove-Profile` (alias `Remove-ProfilesFromRemoteComputer`)
 **Credentials:** `Test-Credential`, `Get-MyCredential`
@@ -189,11 +189,16 @@ The module exports 32 functions and five aliases (`whois`, `Transpose-Object`, `
 Get-Whois -Domain "example.com"
 ```
 
-#### `Get-SSLCertificateExpirationDate`
-- Connects to a host on port 443 and returns the SSL certificate expiration date.
+#### `Get-SSLCertInfo`
+- Connects to a host (port 443 by default, or `-Port`) and returns the TLS certificate it presents.
+- Reports expiration date and days remaining, subject/SANs, issuer, AD CS template (internal certs only), key and signature algorithm, chain trust and host-name match, the certificate chain, and the negotiated TLS protocol and cipher.
+- Accepts expired, self-signed, and untrusted certificates so they can still be inspected.
+- `-ServerName` sets the SNI name separately from the address, for checking individual nodes behind a load balancer.
 
 ```powershell
-Get-SSLCertificateExpirationDate -url "www.example.com"
+Get-SSLCertInfo -Url "www.example.com"
+Get-SSLCertInfo -Url "ldap01.contoso.com" -Port 636
+Get-SSLCertInfo -Url 10.0.0.21 -ServerName "portal.contoso.com"
 ```
 
 ### Files and Reports

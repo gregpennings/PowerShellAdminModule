@@ -38,6 +38,10 @@ or otherwise untrusted certs can still be inspected; whether the cert
 would have passed validation is reported instead, in NameMatch,
 ChainTrusted, and ChainStatus.
 
+SAN lists the certificate's Subject Alternative Names as plain values
+(www.example.com, 10.0.0.5, ...), so it can be filtered with
+-contains or -like; it reads 'No SAN applied' if the cert has none.
+
 Template is only populated for certificates issued by a Microsoft
 enterprise CA (AD CS).
 Public CAs don't record a template, so it is

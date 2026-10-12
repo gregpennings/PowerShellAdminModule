@@ -14,6 +14,10 @@ function Get-CertInfo {
         validity window, SANs, key info, signature algorithm, and AD CS
         certificate template (empty for certs from public CAs).
 
+        In both, SAN is an array of plain names (www.example.com, 10.0.0.5,
+        ...) that can be filtered with -contains or -like, or the string
+        'No SAN applied' if there are none.
+
         -Csr and -Pem together with -Compare check whether the CSR's public
         key matches the certificate's public key -- useful for confirming the
         right CSR was the one that got signed.
@@ -116,7 +120,7 @@ function Get-CertInfo {
                     PSTypeName      = 'Admin.CertInfo.Csr'
                     Path            = (Resolve-Path $Csr).Path
                     Subject         = $request.SubjectName.Name
-                    SubjectAltNames = Get-CertSanText -Extensions $request.CertificateExtensions
+                    SAN             = Get-CertSubjectAltName -Extensions $request.CertificateExtensions
                     KeyAlgorithm    = $keyInfo.Algorithm
                     KeySize         = $keyInfo.KeySize
                 }
@@ -136,7 +140,7 @@ function Get-CertInfo {
                     NotBefore           = $cert.NotBefore
                     NotAfter            = $cert.NotAfter
                     DaysUntilExpiration = [int][math]::Round(($cert.NotAfter - (Get-Date)).TotalDays)
-                    SubjectAltNames     = Get-CertSanText -Extensions $cert.Extensions
+                    SAN                 = Get-CertSubjectAltName -Extensions $cert.Extensions
                     KeyAlgorithm        = $keyInfo.Algorithm
                     KeySize             = $keyInfo.KeySize
                     SignatureAlgorithm  = $cert.SignatureAlgorithm.FriendlyName

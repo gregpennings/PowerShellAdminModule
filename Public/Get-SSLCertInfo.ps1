@@ -11,6 +11,10 @@ function Get-SSLCertInfo {
         would have passed validation is reported instead, in NameMatch,
         ChainTrusted, and ChainStatus.
 
+        SAN lists the certificate's Subject Alternative Names as plain values
+        (www.example.com, 10.0.0.5, ...), so it can be filtered with
+        -contains or -like; it reads 'No SAN applied' if the cert has none.
+
         Template is only populated for certificates issued by a Microsoft
         enterprise CA (AD CS). Public CAs don't record a template, so it is
         empty for those. The template OID is resolved to its display name on
@@ -149,7 +153,7 @@ function Get-SSLCertInfo {
                 Port                = $effectivePort
                 ServerName          = $targetHost
                 Subject             = $cert.Subject
-                SubjectAltNames     = Get-CertSanText -Extensions $cert.Extensions
+                SAN                 = Get-CertSubjectAltName -Extensions $cert.Extensions
                 Issuer              = $cert.Issuer
                 Template            = $template.Name
                 TemplateOid         = $template.Oid

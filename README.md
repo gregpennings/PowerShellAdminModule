@@ -191,7 +191,7 @@ Get-Whois -Domain "example.com"
 
 #### `Get-SSLCertInfo`
 - Connects to a host (port 443 by default, or `-Port`) and returns the TLS certificate it presents.
-- Reports expiration date and days remaining, subject/SANs, issuer, AD CS template (internal certs only), key and signature algorithm, chain trust and host-name match, the certificate chain, and the negotiated TLS protocol and cipher.
+- Reports expiration date and days remaining, subject, SANs (a plain `SAN` list you can filter, or `No SAN applied`), issuer, AD CS template (internal certs only), key and signature algorithm, chain trust and host-name match, the certificate chain, and the negotiated TLS protocol and cipher.
 - Accepts expired, self-signed, and untrusted certificates so they can still be inspected.
 - `-ServerName` sets the SNI name separately from the address, for checking individual nodes behind a load balancer.
 

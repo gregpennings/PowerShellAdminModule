@@ -92,9 +92,10 @@ Loads a stored PSCredential from a file, creating it on first use.
 
 Lists non-loaded, non-special user profiles on a computer.
 
-### [Get-SSLCertificateExpirationDate](Get-SSLCertificateExpirationDate.html)
+### [Get-SSLCertInfo](Get-SSLCertInfo.html)
 
-Gets the expiration date of a host's SSL/TLS certificate.
+Gets the SSL/TLS certificate a host presents, with its expiration date,
+AD CS template, chain trust, and negotiated TLS details.
 
 ### [Get-SystemInfo](Get-SystemInfo.html)
 

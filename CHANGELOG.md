@@ -5,6 +5,44 @@ Fine-grained, line-level history lives in git (`git log`, `git blame`); this
 file records the *why* in human terms, per the dated notes carried over from
 the original module header.
 
+## [9.0.0] - 2026-10-12
+
+Major bump: `Get-SSLCertificateExpirationDate` is removed (see Removed).
+
+### Added
+
+- **`Get-SSLCertInfo`**: connects to a host and returns the full TLS
+  certificate picture instead of just a date. That includes `ExpirationDate`
+  and `DaysUntilExpiration`, subject, SANs, issuer, thumbprint, serial, key
+  and signature algorithm, and the AD CS certificate template (name and OID)
+  for internally issued certs. It reports whether the cert would have passed
+  validation (`NameMatch`, `ChainTrusted`, `ChainStatus`) while still
+  accepting any cert, so expired and self-signed ones can be inspected. It
+  also returns the built certificate chain and the negotiated TLS protocol
+  and cipher suite.
+  - `-Port` picks the port (default 443) and `-ServerName` (alias `-SNI`)
+    sends a different SNI name than the address connected to, for checking
+    each node behind a load balancer.
+  - `-Url` accepts a full URL (`https://host:8443/path`).
+  - `-TimeoutSeconds` (default 10) bounds both the connect and the
+    handshake, so a port that accepts the connection but never speaks TLS
+    can't hang a pipeline.
+- `Get-CertInfo -Pem` now also reports `Template` and `TemplateOid`.
+
+### Changed
+
+- `Get-CertInfo`'s key and SAN decoding moved to private helpers
+  (`Get-CertKeyInfo`, `Get-CertSanText`) shared with `Get-SSLCertInfo`,
+  alongside the new `Get-CertTemplate`.
+- `DaysUntilExpiration` on `Get-CertInfo -Pem` is now an integer (it was a
+  whole-number double, which table output showed as `77.00`).
+
+### Removed
+
+- **Breaking:** `Get-SSLCertificateExpirationDate`. Use
+  `(Get-SSLCertInfo -Url <host>).ExpirationDate` for the same bare
+  `[datetime]`.
+
 ## [8.0.0] - 2026-08-20
 
 ### Removed

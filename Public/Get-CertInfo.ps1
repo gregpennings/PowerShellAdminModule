@@ -11,7 +11,8 @@ function Get-CertInfo {
         intentionally left out rather than guessed.)
 
         -Pem alone decodes a PEM-encoded X.509 certificate: subject, issuer,
-        validity window, SANs, key info, and signature algorithm.
+        validity window, SANs, key info, signature algorithm, and AD CS
+        certificate template (empty for certs from public CAs).
 
         -Csr and -Pem together with -Compare check whether the CSR's public
         key matches the certificate's public key -- useful for confirming the
@@ -82,26 +83,6 @@ function Get-CertInfo {
         [string]$ChainPath
     )
 
-    function Get-KeyInfo([System.Security.Cryptography.X509Certificates.PublicKey]$PublicKey) {
-        $rsa = $PublicKey.GetRSAPublicKey()
-        if ($rsa) {
-            return [PSCustomObject]@{ Algorithm = 'RSA'; KeySize = $rsa.KeySize; Spki = $rsa.ExportSubjectPublicKeyInfo() }
-        }
-        $ec = $PublicKey.GetECDsaPublicKey()
-        if ($ec) {
-            return [PSCustomObject]@{ Algorithm = 'ECDSA'; KeySize = $ec.KeySize; Spki = $ec.ExportSubjectPublicKeyInfo() }
-        }
-        # Unsupported key type (e.g. DSA, Ed25519): report what we can, but
-        # RawData isn't SPKI-encoded, so -Compare treats this as "unknown"
-        # rather than risk a false non-match.
-        return [PSCustomObject]@{ Algorithm = $PublicKey.Oid.FriendlyName; KeySize = $null; Spki = $PublicKey.EncodedKeyValue.RawData }
-    }
-
-    function Get-SanText($Extensions) {
-        $sanExt = $Extensions | Where-Object { $_.Oid.Value -eq '2.5.29.17' } | Select-Object -First 1
-        if ($sanExt) { $sanExt.Format($false) } else { $null }
-    }
-
     function Get-CsrRequest([string]$Path) {
         if ($PSVersionTable.PSVersion -lt [version]'7.3') {
             throw "Reading a CSR requires PowerShell 7.3+ (.NET 7, for CertificateRequest.LoadSigningRequestPem). Current version: $($PSVersionTable.PSVersion)"
@@ -130,12 +111,12 @@ function Get-CertInfo {
 
             'Csr' {
                 $request = Get-CsrRequest -Path $Csr
-                $keyInfo = Get-KeyInfo -PublicKey $request.PublicKey
+                $keyInfo = Get-CertKeyInfo -PublicKey $request.PublicKey
                 [PSCustomObject]@{
                     PSTypeName      = 'Admin.CertInfo.Csr'
                     Path            = (Resolve-Path $Csr).Path
                     Subject         = $request.SubjectName.Name
-                    SubjectAltNames = Get-SanText -Extensions $request.CertificateExtensions
+                    SubjectAltNames = Get-CertSanText -Extensions $request.CertificateExtensions
                     KeyAlgorithm    = $keyInfo.Algorithm
                     KeySize         = $keyInfo.KeySize
                 }
@@ -143,7 +124,8 @@ function Get-CertInfo {
 
             'Pem' {
                 $cert = Get-PemCert -Path $Pem
-                $keyInfo = Get-KeyInfo -PublicKey $cert.PublicKey
+                $keyInfo = Get-CertKeyInfo -PublicKey $cert.PublicKey
+                $template = Get-CertTemplate -Extensions $cert.Extensions
                 [PSCustomObject]@{
                     PSTypeName          = 'Admin.CertInfo.Cert'
                     Path                = (Resolve-Path $Pem).Path
@@ -153,19 +135,21 @@ function Get-CertInfo {
                     SerialNumber        = $cert.SerialNumber
                     NotBefore           = $cert.NotBefore
                     NotAfter            = $cert.NotAfter
-                    DaysUntilExpiration = [math]::Round(($cert.NotAfter - (Get-Date)).TotalDays)
-                    SubjectAltNames     = Get-SanText -Extensions $cert.Extensions
+                    DaysUntilExpiration = [int][math]::Round(($cert.NotAfter - (Get-Date)).TotalDays)
+                    SubjectAltNames     = Get-CertSanText -Extensions $cert.Extensions
                     KeyAlgorithm        = $keyInfo.Algorithm
                     KeySize             = $keyInfo.KeySize
                     SignatureAlgorithm  = $cert.SignatureAlgorithm.FriendlyName
+                    Template            = $template.Name
+                    TemplateOid         = $template.Oid
                 }
             }
 
             'Compare' {
                 $request = Get-CsrRequest -Path $Csr
                 $cert = Get-PemCert -Path $Pem
-                $csrKey = Get-KeyInfo -PublicKey $request.PublicKey
-                $certKey = Get-KeyInfo -PublicKey $cert.PublicKey
+                $csrKey = Get-CertKeyInfo -PublicKey $request.PublicKey
+                $certKey = Get-CertKeyInfo -PublicKey $cert.PublicKey
                 $match = if ($null -eq $csrKey.KeySize -or $null -eq $certKey.KeySize) {
                     $null
                 } else {

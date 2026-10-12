@@ -5,6 +5,26 @@ Fine-grained, line-level history lives in git (`git log`, `git blame`); this
 file records the *why* in human terms, per the dated notes carried over from
 the original module header.
 
+## [10.0.0] - 2026-10-12
+
+Major bump: the `SubjectAltNames` property is renamed to `SAN` and changes
+type (see Changed).
+
+### Changed
+
+- **Breaking:** `Get-SSLCertInfo` and `Get-CertInfo` (`-Pem` and `-Csr`)
+  now return Subject Alternative Names as `SAN`, an array of plain values
+  (`www.example.com`, `10.0.0.5`, `user@contoso.com`), instead of
+  `SubjectAltNames`, one display string with a "DNS Name=" style label on
+  every entry. The array can be filtered directly
+  (`$_.SAN -contains 'www.example.com'`). A certificate or CSR with no SAN
+  extension reports `No SAN applied` rather than an empty value.
+- SANs are decoded from the extension's ASN.1 rather than its display text,
+  whose labels are localized. DNS names, IP addresses, email addresses, URIs,
+  directory names, and UPNs are returned. Other name types are skipped, with
+  a `-Verbose` message. The private `Get-CertSanText` helper is replaced by
+  `Get-CertSubjectAltName`.
+
 ## [9.0.0] - 2026-10-12
 
 Major bump: `Get-SSLCertificateExpirationDate` is removed (see Removed).

@@ -8,8 +8,8 @@ function ConvertFrom-QuserOutput {
         runs of whitespace breaks as soon as a field is blank -- most commonly
         SESSIONNAME on a disconnected session with no session name -- because
         every column after it shifts left. That shift has landed STATE ("Disc")
-        in the SessionID slot handed to Invoke-RDUserLogoff, which then fails
-        converting "Disc" to Int32. Reading column offsets from the header row
+        in the SessionID slot handed to the logoff call (then Invoke-RDUserLogoff,
+        which failed converting "Disc" to Int32). Reading column offsets from the header row
         instead means a blank field just produces a blank value, not a shift.
 
     .PARAMETER Line

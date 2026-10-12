@@ -14,8 +14,9 @@ function Clear-LoggedOnSession {
             optionally filtered first) and only those exact sessions are
             logged off.
 
-        Handles both RDP-named sessions (rdp-tcp#NN, via 'logoff' on the host) and
-        numeric session IDs (via Invoke-RDUserLogoff).
+        quser and logoff run on the target itself over WinRM (Invoke-Command),
+        connecting by FQDN so Kerberos works across domains. You need WinRM
+        access and admin rights on the target.
 
         Supports -WhatIf / -Confirm. Use -WhatIf to preview which sessions would be
         logged off before committing -- recommended with -Select:$false.
@@ -88,10 +89,14 @@ function Clear-LoggedOnSession {
         }
 
         # Get the list of logged-on sessions
-        $users = quser /server:$ComputerName 2>$null | ConvertFrom-QuserOutput
+        $users = Get-QuserOutput -ComputerName $ComputerName -ErrorVariable quserError | ConvertFrom-QuserOutput
 
         if (-not $users) {
-            Write-Warning "No logged-on sessions found on $ComputerName."
+            # A failed query was already reported by Get-QuserOutput; only warn
+            # when quser genuinely found nobody.
+            if (-not $quserError) {
+                Write-Warning "No logged-on sessions found on $ComputerName."
+            }
             return
         }
 

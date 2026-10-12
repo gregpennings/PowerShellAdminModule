@@ -30,8 +30,9 @@ This cmdlet has the following aliases,
 
 ## DESCRIPTION
 
-Runs quser against the target computer and parses the output into objects.
-Read-only -- it does not log anyone off (use Clear-LoggedOnSession for that).
+Runs quser on the target computer and parses the output into objects.
+Remote computers are reached over WinRM (Invoke-Command) by FQDN, so you
+need WinRM access and admin rights on the target. Read-only -- it does not log anyone off (use Clear-LoggedOnSession for that).
 Pipe to Out-GridView (ogv), Where-Object, Format-Table, etc.
 as needed, or
 pipe straight to Clear-LoggedOnSession to log off just the sessions you've

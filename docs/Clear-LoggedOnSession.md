@@ -48,8 +48,9 @@ from Get-LoggedOnSession,
     optionally filtered first) and only those exact sessions are
     logged off.
 
-Handles both RDP-named sessions (rdp-tcp#NN, via 'logoff' on the host) and
-numeric session IDs (via Invoke-RDUserLogoff).
+quser and logoff run on the target itself over WinRM (Invoke-Command),
+connecting by FQDN so Kerberos works across domains. You need WinRM
+access and admin rights on the target.
 
 Supports -WhatIf / -Confirm.
 Use -WhatIf to preview which sessions would be

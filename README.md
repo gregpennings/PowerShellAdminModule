@@ -356,9 +356,11 @@ Find-VMByIPLike  -IP "10.1.2"
 
 #### `Clear-LoggedOnSession`
 - Logs off selected users from a remote computer using `quser` and `Out-GridView`.
+  Runs `quser`/`logoff` on the target over WinRM (by FQDN); needs admin rights there.
 
 #### `Get-LoggedOnSession`
-- Returns logged-on sessions from a remote workstation (`quser`) as objects.
+- Returns logged-on sessions from a remote computer (`quser`, run on the target
+  over WinRM by FQDN) as objects.
   Read-only — it does not log anyone off. Pipe to `Out-GridView` for the grid view.
 
 ```powershell

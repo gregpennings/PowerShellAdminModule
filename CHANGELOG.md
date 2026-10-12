@@ -5,6 +5,33 @@ Fine-grained, line-level history lives in git (`git log`, `git blame`); this
 file records the *why* in human terms, per the dated notes carried over from
 the original module header.
 
+## [10.1.0] - 2026-10-12
+
+### Fixed
+
+- `Get-LoggedOnSession` and `Clear-LoggedOnSession` reported no sessions on
+  hosts that reject remote session queries, such as HCIDALMON01. There,
+  `quser /server:X` fails with "Error [1707]: The network address is
+  invalid", and both functions discarded quser's error output, so the
+  failure looked like "No logged-on sessions found". Failures now report
+  quser's or WinRM's actual error.
+
+### Changed
+
+- `Get-LoggedOnSession` and `Clear-LoggedOnSession` no longer use
+  `quser /server:` or `Invoke-RDUserLogoff`. `quser` and `logoff` now run on
+  the target itself over WinRM (`Invoke-Command`), through the new private
+  `Invoke-OnComputer` and `Get-QuserOutput` helpers. The local computer is
+  queried in-process. This requires WinRM access and admin rights on the
+  target, and no longer needs the RemoteDesktop module.
+- Short computer names are resolved to their DNS FQDN before connecting
+  (e.g. `hcidalmon01` -> `hcidalmon01.hci.pvt`), so Kerberos builds the right
+  SPN, including for hosts outside your own domain. IP addresses are used as
+  given, never reverse-resolved, because a stale PTR record could target the
+  wrong machine.
+- Logoff refuses a non-numeric session ID rather than passing it to
+  `logoff`.
+
 ## [10.0.0] - 2026-10-12
 
 Major bump: the `SubjectAltNames` property is renamed to `SAN` and changes

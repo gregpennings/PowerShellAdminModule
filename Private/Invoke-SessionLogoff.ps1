@@ -1,13 +1,14 @@
 function Invoke-SessionLogoff {
     <#
     .SYNOPSIS
-        Logs off a single quser session on a remote computer.
+        Logs off a single quser session on a computer.
 
     .DESCRIPTION
-        Shared logoff dispatch used by both of Clear-LoggedOnSession's
-        parameter sets (-ComputerName loop and pipeline). Handles RDP-named
-        sessions (rdp-tcp#NN, via 'logoff' on the host) and numeric session
-        IDs (via Invoke-RDUserLogoff).
+        Shared logoff used by both of Clear-LoggedOnSession's parameter sets
+        (-ComputerName loop and pipeline). Runs 'logoff <SessionID>' on the
+        target itself via Invoke-OnComputer (in-process locally, WinRM to the
+        FQDN remotely) -- the same transport Get-QuserOutput uses to list the
+        sessions, so anything that can be listed can be logged off.
     #>
     [CmdletBinding()]
     param(
@@ -19,20 +20,28 @@ function Invoke-SessionLogoff {
     )
 
     # The caller already confirmed via its own ShouldProcess before calling this.
-    # Without suppressing it here, -Confirm on Clear-LoggedOnSession bleeds via
-    # $ConfirmPreference into whatever ShouldProcess-aware cmdlets run underneath --
-    # e.g. the RemoteDesktop module builds/tears down an implicit CIM proxy module
-    # under %TEMP% on first use, and its own internal Copy-Item/Remove-Item calls
-    # inherit that ambient preference, prompting for unrelated "Copy File"/"Remove
-    # Directory" operations on that scratch folder. Invoke-RDUserLogoff itself
-    # doesn't declare -Confirm/-WhatIf, so this has to be the preference variable,
-    # not a parameter.
+    # Suppress the ambient $ConfirmPreference so -Confirm on Clear-LoggedOnSession
+    # doesn't bleed into ShouldProcess-aware cmdlets running underneath.
     $ConfirmPreference = 'None'
 
-    if ($SessionID -match 'rdp-tcp#\d+') {
-        $sessionName = $SessionID
-        Invoke-Command -ComputerName $ComputerName -ScriptBlock { logoff $using:sessionName }
-    } else {
-        Invoke-RDUserLogoff -HostServer $ComputerName -UnifiedSessionID $SessionID -Force
+    # quser IDs are numeric; anything else means the row was misparsed, and
+    # handing it to logoff could match the wrong session by name.
+    if ($SessionID -notmatch '^\d+$') {
+        Write-Error "Session ID '$SessionID' on $ComputerName is not numeric; not logging it off."
+        return
+    }
+
+    $runLogoff = {
+        param($Id)
+        $out = logoff $Id 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            throw "logoff $Id failed (exit code $LASTEXITCODE): $(($out | ForEach-Object { "$_".Trim() } | Where-Object { $_ }) -join ' ')"
+        }
+    }
+
+    try {
+        Invoke-OnComputer -ComputerName $ComputerName -ScriptBlock $runLogoff -ArgumentList $SessionID
+    } catch {
+        Write-Error "Could not log off session $SessionID on ${ComputerName}: $($_.Exception.Message)"
     }
 }
